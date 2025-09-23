@@ -12,11 +12,12 @@ import java.util.List;
 
 @SpringBootApplication
 @RestController
+@RequestMapping("/api/posts")
 public class PostController {
     // Хранилище добавленных постов, то есть обычный список
     private List<Post> posts = new ArrayList<>();
 
-    @GetMapping("/posts")
+    @GetMapping
     public ResponseEntity<List<Post>> index(@RequestParam(defaultValue = "10") Integer limit) {
         List<Post> limitedPosts = posts.stream().limit(limit).toList();
         return ResponseEntity.ok()
@@ -24,7 +25,7 @@ public class PostController {
                 .body(limitedPosts);
     }
 
-    @PostMapping("/posts")
+    @PostMapping
     public ResponseEntity<Post> create(@RequestBody Post post) {
         posts.add(post);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -34,7 +35,7 @@ public class PostController {
         return ResponseEntity.created(location).body(post);
     }
 
-    @GetMapping("/posts/{id}") // Вывод поста
+    @GetMapping("/{id}") // Вывод поста
     public ResponseEntity<Post> show(@PathVariable String id) {
         var post = posts.stream()
                 .filter(p -> p.getId().equals(id))
@@ -42,7 +43,7 @@ public class PostController {
         return post.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PutMapping("/posts/{id}") // Обновление поста
+    @PutMapping("/{id}") // Обновление поста
     public ResponseEntity<Post> update(@PathVariable String id, @RequestBody Post data) {
         var maybePost = posts.stream()
                 .filter(p -> p.getId().equals(id))
@@ -58,7 +59,7 @@ public class PostController {
         }
     }
 
-    @DeleteMapping("/posts/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> destroy(@PathVariable String id) {
         boolean removed = posts.removeIf(p -> p.getId().equals(id)); // Используйте уникальное поле
         if (removed) {
