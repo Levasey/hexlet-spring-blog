@@ -1,72 +1,63 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.model.Post;
+import io.hexletspringblog.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootApplication
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-    // Хранилище добавленных постов, то есть обычный список
-    private List<Post> posts = new ArrayList<>();
+    @Autowired
+    private PostRepository postRepository;
 
     @GetMapping
-    public ResponseEntity<List<Post>> index(@RequestParam(defaultValue = "10") Integer limit) {
-        List<Post> limitedPosts = posts.stream().limit(limit).toList();
-        return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(posts.size()))
-                .body(limitedPosts);
+    @ResponseStatus(HttpStatus.OK)
+    public List<Post> index() {
+        return postRepository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<Post> create(@RequestBody Post post) {
-        posts.add(post);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(post.getId()) // Убедитесь, что у поста есть идентификатор
-                .toUri();
-        return ResponseEntity.created(location).body(post);
+    public ResponseEntity<Post> createPost(@RequestBody Post post) {
+        Post saved = postRepository.save(post);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/{id}") // Вывод поста
-    public ResponseEntity<Post> show(@PathVariable String id) {
-        var post = posts.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-        return post.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<Post> showPost(@PathVariable Long id) {
+        var post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+        return ResponseEntity.ok(post);
     }
 
     @PutMapping("/{id}") // Обновление поста
-    public ResponseEntity<Post> update(@PathVariable String id, @RequestBody Post data) {
-        var maybePost = posts.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-        if (maybePost.isPresent()) {
-            var post = maybePost.get();
+    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post data) {
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+        if (post == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } else {
             post.setTitle(data.getTitle());
             post.setContent(data.getContent());
             post.setAuthor(data.getAuthor());
-            return ResponseEntity.ok(post);
-        } else {
-            return ResponseEntity.notFound().build();
+            postRepository.save(post);
+            return ResponseEntity.status(HttpStatus.OK).body(post);
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> destroy(@PathVariable String id) {
-        boolean removed = posts.removeIf(p -> p.getId().equals(id)); // Используйте уникальное поле
-        if (removed) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
+        if (!postRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Post not found with id: " + id);
         }
+        postRepository.deleteById(id);
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
