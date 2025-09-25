@@ -1,72 +1,56 @@
 package io.hexletspringblog.controller;
 
 import io.hexletspringblog.model.Post;
+import io.hexletspringblog.repository.PostRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootApplication
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
-    // Хранилище добавленных постов, то есть обычный список
-    private List<Post> posts = new ArrayList<>();
+    @Autowired
+    private PostRepository postRepository;
 
     @GetMapping
-    public ResponseEntity<List<Post>> index(@RequestParam(defaultValue = "10") Integer limit) {
-        List<Post> limitedPosts = posts.stream().limit(limit).toList();
-        return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(posts.size()))
-                .body(limitedPosts);
+    @ResponseStatus(HttpStatus.OK)
+    public List<Post> index() {
+        return postRepository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<Post> create(@RequestBody Post post) {
-        posts.add(post);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(post.getId()) // Убедитесь, что у поста есть идентификатор
-                .toUri();
-        return ResponseEntity.created(location).body(post);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Post create(@RequestBody Post post) {
+        postRepository.save(post);
+        return post;
     }
 
     @GetMapping("/{id}") // Вывод поста
-    public ResponseEntity<Post> show(@PathVariable String id) {
-        var post = posts.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-        return post.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    @ResponseStatus(HttpStatus.OK)
+    public Post show(@PathVariable Long id) {
+        return postRepository.findById(id).orElse(null);
     }
 
     @PutMapping("/{id}") // Обновление поста
-    public ResponseEntity<Post> update(@PathVariable String id, @RequestBody Post data) {
-        var maybePost = posts.stream()
-                .filter(p -> p.getId().equals(id))
-                .findFirst();
-        if (maybePost.isPresent()) {
-            var post = maybePost.get();
+    @ResponseStatus(HttpStatus.OK)
+    public Post update(@PathVariable Long id, @RequestBody Post data) {
+        Post post = postRepository.findById(id).orElse(null);
+        if (post == null) {
+            return null; // Или можно генерировать исключение и обрабатывать его с помощью @ExceptionHandler
+        } else {
             post.setTitle(data.getTitle());
             post.setContent(data.getContent());
             post.setAuthor(data.getAuthor());
-            return ResponseEntity.ok(post);
-        } else {
-            return ResponseEntity.notFound().build();
+            postRepository.save(post);
+            return post;
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> destroy(@PathVariable String id) {
-        boolean removed = posts.removeIf(p -> p.getId().equals(id)); // Используйте уникальное поле
-        if (removed) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
-        }
+    public void destroy(@PathVariable Long id) {
+        postRepository.deleteById(id);
     }
 }
