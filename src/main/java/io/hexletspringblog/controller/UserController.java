@@ -1,5 +1,6 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.UserRepository;
@@ -24,6 +25,12 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
+        List<User> users = userRepository.findAll();
+        for (User u : users) {
+            if (u.equals(user)) {
+                throw new ResourceAlreadyExistsException("User already exists");
+            }
+        }
         User saved = userRepository.save(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
