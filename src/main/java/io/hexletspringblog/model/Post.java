@@ -1,15 +1,16 @@
 package io.hexletspringblog.model;
 
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.validation.constraints.Size;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 public class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,7 +29,13 @@ public class Post {
     private String author;
 
     private boolean published;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    private LocalDateTime updatedAt;
 
     public Long getId() {
         return id;
