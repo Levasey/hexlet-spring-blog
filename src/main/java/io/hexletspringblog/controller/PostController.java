@@ -2,6 +2,7 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.model.Post;
+import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -16,6 +17,9 @@ import java.util.List;
 public class PostController {
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private CommentRepository commentRepository;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -57,6 +61,7 @@ public class PostController {
         if (!postRepository.existsById(id)) {
             throw new ResourceNotFoundException("Post not found with id: " + id);
         }
+        commentRepository.deleteById(id);
         postRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }

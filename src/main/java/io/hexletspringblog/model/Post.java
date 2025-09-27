@@ -10,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "posts")
 @EntityListeners(AuditingEntityListener.class)
 public class Post {
     @Id
@@ -21,7 +22,6 @@ public class Post {
     private String title;
 
     @NotBlank(message = "Content cannot be blank")
-    @Size(min = 2, max = 30, message = "Content must be between 2 and 30 characters")
     private String content;
 
     @NotBlank(message = "Author cannot be blank")

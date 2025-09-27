@@ -19,6 +19,7 @@ repositories {
 }
 
 dependencies {
+    implementation("net.datafaker:datafaker:1.9.0")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
