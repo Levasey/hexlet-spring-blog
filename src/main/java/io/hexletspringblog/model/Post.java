@@ -18,20 +18,17 @@ public class Post {
     private Long id;
 
     @NotBlank(message = "Title cannot be blank")
-    @Size(min = 2, max = 30, message = "Title must be between 2 and 30 characters")
+    @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
     private String title;
 
     @NotBlank(message = "Content cannot be blank")
     private String content;
 
-    @NotBlank(message = "Author cannot be blank")
-    @Size(min = 2, max = 30, message = "Author must be between 2 and 30 characters")
     private String author;
 
     private boolean published;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate

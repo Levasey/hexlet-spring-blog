@@ -38,7 +38,6 @@ public class User {
     private LocalDate birthday;
 
     @CreatedDate
-    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate

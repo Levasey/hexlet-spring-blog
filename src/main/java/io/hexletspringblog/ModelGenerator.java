@@ -6,9 +6,9 @@ import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import net.datafaker.Faker;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -26,6 +26,7 @@ public class ModelGenerator {
     }
 
     @PostConstruct
+    @Profile("!test")
     public void generateData() {
         for (int i = 0; i < 5; i++) {
             // Create and save User
