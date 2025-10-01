@@ -32,21 +32,22 @@ sonar {
 }
 
 dependencies {
-    implementation("org.instancio:instancio-junit:3.3.0")
-    implementation("net.datafaker:datafaker:1.9.0")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.projectlombok:lombok")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+
+    compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("org.springframework.boot:spring-boot-starter-validation")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation("com.h2database:h2")
-    developmentOnly("org.springframework.boot:spring-boot-devtools")
-    runtimeOnly("com.h2database:h2")
+    implementation("org.instancio:instancio-junit:3.3.0")
+    implementation("net.datafaker:datafaker:1.9.0")
 
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.h2database:h2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
 }
 
 tasks.jacocoTestReport {
@@ -62,9 +63,5 @@ tasks.check {
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-tasks.test {
     useJUnitPlatform()
 }
