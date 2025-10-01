@@ -24,10 +24,29 @@ sonar {
     properties {
         property("sonar.projectKey", "Levasey_hexlet-spring-blog")
         property("sonar.organization", "levasey")
-        property("sonar.java.coveragePlugin", "jacoco")
-        property("sonar.junit.reportPaths", "build/test-results/test")
-        property("sonar.jacoco.reportPaths", "build/jacoco/test.exec")
+        property("sonar.projectName", "Hexlet Spring Blog")
+        property("sonar.host.url", "https://sonarcloud.io")
+
+        // Java configuration
+        property("sonar.java.source", "21")
+        property("sonar.java.target", "21")
+        property("sonar.java.binaries", "build/classes")
+        property("sonar.java.libraries", "build/libs/*.jar")
+
+        // Coverage configuration
         property("sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml")
+        property("sonar.coverage.exclusions", "**/model/**,**/config/**,**/Application.java")
+
+        // Test configuration
+        property("sonar.junit.reportPaths", "build/test-results/test")
+        property("sonar.tests", "src/test/java")
+
+        // Source configuration
+        property("sonar.sources", "src/main/java")
+        property("sonar.tests", "src/test/java")
+
+        // Quality Gate
+        property("sonar.qualitygate.wait", "true")
     }
 }
 
