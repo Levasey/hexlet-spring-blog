@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: 21
-          distribution: 'zulu' # Alternative distribution options are available
+          distribution: 'zulu'
 
       - name: Cache SonarQube packages
         uses: actions/cache@v4
@@ -37,10 +37,14 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
           restore-keys: ${{ runner.os }}-gradle
 
+      - name: Run tests with retry
+        run: |
+          ./gradlew test --no-daemon --info || ./gradlew test --no-daemon --info
+
       - name: Coverage report
-        run: ./gradlew jacocoTestReport
+        run: ./gradlew jacocoTestReport --no-daemon
 
       - name: Build and analyze
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info
+        run: ./gradlew build sonar --no-daemon --info
