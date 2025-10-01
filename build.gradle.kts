@@ -1,5 +1,7 @@
 plugins {
     java
+    jacoco
+    id("org.sonarqube") version "6.3.1.5724"
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
 }
@@ -18,7 +20,15 @@ repositories {
     mavenCentral()
 }
 
+sonar {
+    properties {
+        property("sonar.projectKey", "Levasey_hexlet-spring-blog")
+        property("sonar.organization", "levasey")
+    }
+}
+
 dependencies {
+    implementation("org.instancio:instancio-junit:3.3.0")
     implementation("net.datafaker:datafaker:1.9.0")
     implementation("org.springframework.boot:spring-boot-starter")
     implementation("org.springframework.boot:spring-boot-starter-web")
@@ -26,11 +36,29 @@ dependencies {
     implementation("org.projectlombok:lombok")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("com.h2database:h2")
     "developmentOnly"("org.springframework.boot:spring-boot-devtools")
     runtimeOnly("com.h2database:h2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestReport)
 }
 
 tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
+tasks.test {
     useJUnitPlatform()
 }
