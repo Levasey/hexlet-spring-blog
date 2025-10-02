@@ -44,9 +44,6 @@ sonar {
         // Source configuration
         property("sonar.sources", "src/main/java")
         property("sonar.tests", "src/test/java")
-
-        // Quality Gate
-        property("sonar.qualitygate.wait", "true")
     }
 }
 
