@@ -1,13 +1,25 @@
 package io.hexletspringblog;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.assertj.core.api.Assertions.assertThat;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hexletspringblog.model.Post;
+import io.hexletspringblog.repository.PostRepository;
+import org.instancio.Instancio;
+import org.instancio.Select;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -19,8 +31,43 @@ class PostControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private ObjectMapper om;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @BeforeEach
+    void setUp() {
+        postRepository.deleteAll();
+    }
+
+    @Test
+    void testIndex() throws Exception {
+        // Create some test data
+        Post post = generatePost();
+        postRepository.save(post);
+
+        var result = mockMvc.perform(get("/api/posts"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var body = result.getResponse().getContentAsString();
+
+        // Instead of checking if the entire response is an array,
+        // check that the "content" field is an array
+        assertThatJson(body).node("content").isArray();
+
+        // Optional: verify that the content array contains our test post
+        assertThatJson(body).node("content").isArray().hasSize(1);
+    }
+
     @Test
     void listPublished_returns200_andPage() throws Exception {
+        // Create some test data
+        Post post = generatePost();
+        postRepository.save(post);
+
         mockMvc.perform(get("/api/posts")
                         .param("page", "0")
                         .param("size", "5"))
@@ -30,5 +77,74 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.totalElements").exists())
                 .andExpect(jsonPath("$.size").value(5))
                 .andExpect(jsonPath("$.number").value(0));
+    }
+
+    // Additional test methods you might want to add:
+
+    @Test
+    void testCreatePost() throws Exception {
+        Post post = generatePost();
+
+        var request = post("/api/posts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(post));
+
+        mockMvc.perform(request)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value(post.getTitle()))
+                .andExpect(jsonPath("$.content").value(post.getContent()))
+                .andExpect(jsonPath("$.author").value(post.getAuthor()));
+    }
+
+    @Test
+    void testShowPost() throws Exception {
+        Post post = generatePost();
+        postRepository.save(post);
+
+        mockMvc.perform(get("/api/posts/" + post.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(post.getId()))
+                .andExpect(jsonPath("$.title").value(post.getTitle()))
+                .andExpect(jsonPath("$.content").value(post.getContent()));
+    }
+
+    @Test
+    void testUpdatePost() throws Exception {
+        Post post = generatePost();
+        postRepository.save(post);
+
+        var updates = new java.util.HashMap<String, String>();
+        updates.put("title", "Updated Title");
+        updates.put("content", "Updated content");
+
+        var request = put("/api/posts/" + post.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(updates));
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Updated Title"))
+                .andExpect(jsonPath("$.content").value("Updated content"));
+    }
+
+    @Test
+    void testDeletePost() throws Exception {
+        Post post = generatePost();
+        postRepository.save(post);
+
+        mockMvc.perform(delete("/api/posts/" + post.getId()))
+                .andExpect(status().isNoContent());
+
+        // Verify the post was deleted
+        assertThat(postRepository.findById(post.getId())).isEmpty();
+    }
+
+    private Post generatePost() {
+        return Instancio.of(Post.class)
+                .ignore(Select.field(Post::getId))
+                .supply(Select.field(Post::getTitle), () -> "title")
+                .supply(Select.field(Post::getContent), () -> "content content")
+                .supply(Select.field(Post::getAuthor), () -> "author")
+                .create();
     }
 }

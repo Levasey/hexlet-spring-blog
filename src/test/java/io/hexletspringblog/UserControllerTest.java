@@ -46,7 +46,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void testIndex() throws Exception {
+    void testIndex() throws Exception {
         var result = mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -56,7 +56,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void testShow() throws Exception {
+    void testShow() throws Exception {
 
         var user = generateUser();
         userRepository.save(user);
@@ -91,7 +91,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void testUpdateUser_returns200_andBody() throws Exception {
+    void testUpdateUser_returns200_andBody() throws Exception {
         User user = generateUser();
         userRepository.save(user);
 
@@ -109,7 +109,7 @@ class UserControllerTest {
     }
 
     @Test
-    public void testDeleteUser_returns200_andBody() throws Exception {
+    void testDeleteUser_returns200_andBody() throws Exception {
         var user = generateUser();
         userRepository.save(user);
 
