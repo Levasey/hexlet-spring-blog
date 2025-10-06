@@ -1,7 +1,9 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.dto.UserDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
+import io.hexletspringblog.mapper.UserMapper;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,26 +21,27 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private UserMapper userMapper;
+
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll().stream().map(userMapper::toUserDTO).toList();
     }
 
     @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        List<User> users = userRepository.findAll();
-        for (User u : users) {
-            if (u.equals(user)) {
-                throw new ResourceAlreadyExistsException("User already exists");
-            }
+    public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new ResourceAlreadyExistsException("User with this email already exists");
         }
         User saved = userRepository.save(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        UserDTO userDTO = userMapper.toUserDTO(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
         Optional<User> userOptional = userRepository.findById(id);
 
         if (userOptional.isEmpty()) {
@@ -59,7 +62,8 @@ public class UserController {
         }
 
         User updatedUser = userRepository.save(user);
-        return ResponseEntity.ok(updatedUser);
+        UserDTO userDTO = userMapper.toUserDTO(updatedUser);
+        return ResponseEntity.ok(userDTO);
     }
 
     @GetMapping("/{id}")

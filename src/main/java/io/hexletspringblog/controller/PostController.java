@@ -1,6 +1,8 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
+import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
@@ -19,43 +21,51 @@ public class PostController {
     private PostRepository postRepository;
 
     @Autowired
+    private PostMapper postMapper;
+
+    @Autowired
     private CommentRepository commentRepository;
 
     @GetMapping
-    public Page<Post> index(
+    public Page<PostDTO> index(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return postRepository.findAll(pageable);
+        return postRepository.findAll(pageable)
+                .map(post -> postMapper.toDTO(post));
     }
 
     @PostMapping
-    public ResponseEntity<Post> createPost(@RequestBody Post post) {
+    public ResponseEntity<PostDTO> createPost(@RequestBody Post post) {
         Post saved = postRepository.save(post);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+        PostDTO postDTO = postMapper.toDTO(saved);
+        return ResponseEntity.status(HttpStatus.CREATED).body(postDTO);
     }
 
     @GetMapping("/{id}") // Вывод поста
-    public ResponseEntity<Post> showPost(@PathVariable Long id) {
+    public ResponseEntity<PostDTO> showPost(@PathVariable Long id) {
         var post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        return ResponseEntity.ok(post);
+        PostDTO postDTO = postMapper.toDTO(post);
+        return ResponseEntity.ok(postDTO);
     }
 
     @PutMapping("/{id}") // Обновление поста
-    public ResponseEntity<Post> updatePost(@PathVariable Long id, @RequestBody Post data) {
+    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @RequestBody Post data) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        if (post == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(null);
-        } else {
+        if (data.getTitle() != null) {
             post.setTitle(data.getTitle());
-            post.setContent(data.getContent());
-            post.setAuthor(data.getAuthor());
-            postRepository.save(post);
-            return ResponseEntity.status(HttpStatus.OK).body(post);
         }
+        if (data.getContent() != null) {
+            post.setContent(data.getContent());
+        }
+        if (data.getAuthor() != null) {
+            post.setAuthor(data.getAuthor());
+        }
+        Post saved = postRepository.save(post);
+        PostDTO postDTO = postMapper.toDTO(saved);
+        return ResponseEntity.status(HttpStatus.OK).body(postDTO);
     }
 
     @DeleteMapping("/{id}")
@@ -63,7 +73,7 @@ public class PostController {
         if (!postRepository.existsById(id)) {
             throw new ResourceNotFoundException("Post not found with id: " + id);
         }
-        commentRepository.deleteById(id);
+        commentRepository.deleteByPostId(id);
         postRepository.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
