@@ -58,6 +58,8 @@ dependencies {
 
     implementation("org.instancio:instancio-junit:3.3.0")
     implementation("net.datafaker:datafaker:1.9.0")
+    // https://mvnrepository.com/artifact/net.javacrumbs.json-unit/json-unit-assertj
+    testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.h2database:h2")
