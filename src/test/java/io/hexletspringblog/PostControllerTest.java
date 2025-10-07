@@ -10,7 +10,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.PostRepository;
@@ -100,17 +100,18 @@ class PostControllerTest {
         User user = generateUser();
         userRepository.save(user);
 
-        Post post = generatePost(user);
+        // Create PostCreateDTO with userId
+        PostCreateDTO postCreateDTO = generatePostCreateDTO();
+        postCreateDTO.setUserId(user.getId()); // Устанавливаем userId
 
         var request = post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(post));
+                .content(om.writeValueAsString(postCreateDTO));
 
         mockMvc.perform(request)
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.title").value(post.getTitle()))
-                .andExpect(jsonPath("$.content").value(post.getContent()))
-                .andExpect(jsonPath("$.author").value(post.getAuthor()));
+                .andExpect(jsonPath("$.title").value(postCreateDTO.getTitle()))
+                .andExpect(jsonPath("$.content").value(postCreateDTO.getContent()));
     }
 
     @Test
@@ -138,9 +139,11 @@ class PostControllerTest {
         Post post = generatePost(user);
         postRepository.save(post);
 
-        var updates = new java.util.HashMap<String, String>();
-        updates.put("title", "Updated Title");
-        updates.put("content", "Updated content");
+        // Use PostCreateDTO for updates with userId
+        PostCreateDTO updates = generatePostCreateDTO();
+        updates.setTitle("Updated Title");
+        updates.setContent("Updated content");
+        updates.setUserId(user.getId()); // Устанавливаем userId
 
         var request = put("/api/posts/" + post.getId())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -186,5 +189,12 @@ class PostControllerTest {
                 .supply(Select.field(Post::getAuthor), () -> "author")
                 .set(Select.field(Post::getUser), user)
                 .create();
+    }
+
+    private PostCreateDTO generatePostCreateDTO() {
+        PostCreateDTO dto = new PostCreateDTO();
+        dto.setTitle("Test Title");
+        dto.setContent("Test content for the post");
+        return dto;
     }
 }

@@ -1,11 +1,13 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,7 +38,8 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostDTO> createPost(@RequestBody Post post) {
+    public ResponseEntity<PostDTO> createPost(@Valid @RequestBody PostCreateDTO postCreateDTO) {
+        Post post = postMapper.toEntity(postCreateDTO);
         Post saved = postRepository.save(post);
         PostDTO postDTO = postMapper.toDTO(saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(postDTO);
@@ -50,19 +53,19 @@ public class PostController {
         return ResponseEntity.ok(postDTO);
     }
 
-    @PutMapping("/{id}") // Обновление поста
-    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @RequestBody Post data) {
+    @PutMapping("/{id}")
+    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody PostCreateDTO postCreateDTO) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        if (data.getTitle() != null) {
-            post.setTitle(data.getTitle());
+
+        // Обновляем только те поля, которые пришли в DTO
+        if (postCreateDTO.getTitle() != null) {
+            post.setTitle(postCreateDTO.getTitle());
         }
-        if (data.getContent() != null) {
-            post.setContent(data.getContent());
+        if (postCreateDTO.getContent() != null) {
+            post.setContent(postCreateDTO.getContent());
         }
-        if (data.getAuthor() != null) {
-            post.setAuthor(data.getAuthor());
-        }
+
         Post saved = postRepository.save(post);
         PostDTO postDTO = postMapper.toDTO(saved);
         return ResponseEntity.status(HttpStatus.OK).body(postDTO);
