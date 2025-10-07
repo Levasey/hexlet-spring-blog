@@ -11,6 +11,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.model.User;
+import io.hexletspringblog.repository.CommentRepository;
+import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
 import org.instancio.Instancio;
 import org.instancio.Select;
@@ -39,9 +41,17 @@ class UserControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
     @BeforeEach
     void setUp() {
         // Очищаем базу данных перед каждым тестом
+        commentRepository.deleteAll();
+        postRepository.deleteAll();
         userRepository.deleteAll();
     }
 
