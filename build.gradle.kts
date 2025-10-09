@@ -56,20 +56,20 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("org.instancio:instancio-junit:3.3.0")
-    implementation("net.datafaker:datafaker:1.9.0")
-    // https://mvnrepository.com/artifact/net.javacrumbs.json-unit/json-unit-assertj
+    // Исправьте эти зависимости - они должны быть testImplementation
+    testImplementation("org.instancio:instancio-junit:3.3.0")
+    implementation("net.datafaker:datafaker:2.4.2")
     testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("com.h2database:h2")
+    runtimeOnly("com.h2database:h2") // Переместите h2 в runtimeOnly
+
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    implementation ("org.mapstruct:mapstruct:1.6.3")
-
-    annotationProcessor ("org.mapstruct:mapstruct-processor:1.6.3")
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 }
 
 tasks.jacocoTestReport {
@@ -80,13 +80,38 @@ tasks.jacocoTestReport {
     }
 }
 
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = "0.8".toBigDecimal()
+            }
+        }
+    }
+}
+
 tasks.check {
-    dependsOn(tasks.jacocoTestReport)
+    dependsOn(tasks.jacocoTestReport, tasks.jacocoTestCoverageVerification)
 }
 
 tasks.withType<Test> {
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+
+    // Добавьте эту конфигурацию для лучшей обработки тестов
+    systemProperty("spring.profiles.active", "test")
+    systemProperty("java.awt.headless", "true")
+}
+
+// Добавьте задачу для очистки перед тестированием
+tasks.clean {
+    doLast {
+        delete("build")
     }
 }
