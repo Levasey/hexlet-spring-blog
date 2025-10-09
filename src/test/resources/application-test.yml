@@ -22,4 +22,4 @@ logging:
     io.hexletspringblog: DEBUG
 
 app:
-  welcome-message: "Test Welcome Message"
+  welcome-message: "Welcome to Spring blog!"
