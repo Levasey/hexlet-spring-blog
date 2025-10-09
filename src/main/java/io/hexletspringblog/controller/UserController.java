@@ -1,19 +1,19 @@
 package io.hexletspringblog.controller;
 
+import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.UserMapper;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.UserRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -31,34 +31,30 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
+        if (userRepository.findByEmail(userCreateDTO.getEmail()).isPresent()) {
             throw new ResourceAlreadyExistsException("User with this email already exists");
         }
+        User user = userMapper.toEntity(userCreateDTO);
         User saved = userRepository.save(user);
         UserDTO userDTO = userMapper.toUserDTO(saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        Optional<User> userOptional = userRepository.findById(id);
-
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        User user = userOptional.get();
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserCreateDTO userCreateDTO) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
         // Update only the fields that are provided in the request
-        if (updates.containsKey("firstName")) {
-            user.setFirstName((String) updates.get("firstName"));
+        if (userCreateDTO.getFirstName() != null) {
+            user.setFirstName(userCreateDTO.getFirstName());
         }
-        if (updates.containsKey("lastName")) {
-            user.setLastName((String) updates.get("lastName"));
+        if (userCreateDTO.getLastName() != null) {
+            user.setLastName(userCreateDTO.getLastName());
         }
-        if (updates.containsKey("email")) {
-            user.setEmail((String) updates.get("email"));
+        if (userCreateDTO.getEmail() != null) {
+            user.setEmail(userCreateDTO.getEmail());
         }
 
         User updatedUser = userRepository.save(user);

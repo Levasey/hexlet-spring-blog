@@ -7,7 +7,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class PostCreateDTO {
+public class PostUpdateDTO {
+
     @NotBlank
     @Size(min = 3, max = 100)
     private String title;
@@ -15,6 +16,4 @@ public class PostCreateDTO {
     @NotBlank
     @Size(min = 10)
     private String content;
-
-    private Long userId;
 }

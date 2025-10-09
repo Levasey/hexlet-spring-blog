@@ -2,6 +2,7 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
@@ -54,16 +55,16 @@ public class PostController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody PostCreateDTO postCreateDTO) {
+    public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody PostUpdateDTO postUpdateDTO) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
         // Обновляем только те поля, которые пришли в DTO
-        if (postCreateDTO.getTitle() != null) {
-            post.setTitle(postCreateDTO.getTitle());
+        if (postUpdateDTO.getTitle() != null) {
+            post.setTitle(postUpdateDTO.getTitle());
         }
-        if (postCreateDTO.getContent() != null) {
-            post.setContent(postCreateDTO.getContent());
+        if (postUpdateDTO.getContent() != null) {
+            post.setContent(postUpdateDTO.getContent());
         }
 
         Post saved = postRepository.save(post);
