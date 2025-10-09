@@ -16,5 +16,5 @@ public class PostCreateDTO {
     @Size(min = 10)
     private String content;
 
-    private Long userId; // Добавьте это поле
+    private Long userId;
 }
