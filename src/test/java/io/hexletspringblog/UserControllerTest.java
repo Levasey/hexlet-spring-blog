@@ -107,6 +107,8 @@ class UserControllerTest {
 
         var data = new HashMap<>();
         data.put("firstName", "newFirstName");
+        data.put("lastName", user.getLastName());
+        data.put("email", user.getEmail());
 
         var request = put("/api/users/" + user.getId())
                 .contentType(MediaType.APPLICATION_JSON)

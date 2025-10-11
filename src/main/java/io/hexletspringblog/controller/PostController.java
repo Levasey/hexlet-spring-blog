@@ -59,17 +59,10 @@ public class PostController {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
-        // Обновляем только те поля, которые пришли в DTO
-        if (postUpdateDTO.getTitle() != null) {
-            post.setTitle(postUpdateDTO.getTitle());
-        }
-        if (postUpdateDTO.getContent() != null) {
-            post.setContent(postUpdateDTO.getContent());
-        }
+        postMapper.updateEntityFromDTO(postUpdateDTO, post);
 
-        Post saved = postRepository.save(post);
-        PostDTO postDTO = postMapper.toDTO(saved);
-        return ResponseEntity.status(HttpStatus.OK).body(postDTO);
+        postRepository.save(post);
+        return ResponseEntity.ok(postMapper.toDTO(post));
     }
 
     @DeleteMapping("/{id}")

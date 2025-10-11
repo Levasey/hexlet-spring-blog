@@ -2,60 +2,18 @@ package io.hexletspringblog.mapper;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.model.Post;
-import io.hexletspringblog.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
 
-import java.util.stream.Collectors;
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+public interface PostMapper {
 
-@Component
-public class PostMapper {
+    PostDTO toDTO(Post post);
 
-    @Autowired
-    private CommentMapper commentMapper;
+    Post toEntity(PostCreateDTO dto);
 
-    public PostDTO toDTO(Post post) {
-        PostDTO dto = new PostDTO();
-        dto.setId(post.getId());
-        dto.setTitle(post.getTitle());
-        dto.setContent(post.getContent());
-        dto.setAuthor(post.getAuthor());
-        dto.setPublished(post.isPublished());
-        dto.setCreatedAt(post.getCreatedAt());
-        dto.setUpdatedAt(post.getUpdatedAt());
-        dto.setUserId(post.getUser().getId());
-
-        // Безопасная проверка на null для user
-        if (post.getUser() != null) {
-            dto.setUserId(post.getUser().getId());
-        }
-
-        // Маппим комментарии
-        if (post.getComments() != null) {
-            dto.setComments(post.getComments().stream()
-                    .map(commentMapper::toDTO)
-                    .collect(Collectors.toList()));
-        }
-
-        return dto;
-    }
-
-    public Post toEntity(PostCreateDTO postCreateDTO) {
-        Post post = new Post();
-        post.setTitle(postCreateDTO.getTitle());
-        post.setContent(postCreateDTO.getContent());
-        // Остальные поля устанавливаются по умолчанию или в сервисе
-        post.setPublished(false); // по умолчанию не опубликован
-
-        // Создаем временного пользователя или устанавливаем связь
-
-        if (postCreateDTO.getUserId() != null) {
-            User user = new User();
-            user.setId(postCreateDTO.getUserId());
-            post.setUser(user);
-        }
-
-        return post;
-    }
+    void updateEntityFromDTO(PostUpdateDTO dto, @MappingTarget Post post);
 }

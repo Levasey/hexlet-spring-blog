@@ -2,6 +2,7 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
+import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.UserMapper;
@@ -42,24 +43,21 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserCreateDTO userCreateDTO) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
-        // Update only the fields that are provided in the request
-        if (userCreateDTO.getFirstName() != null) {
-            user.setFirstName(userCreateDTO.getFirstName());
-        }
-        if (userCreateDTO.getLastName() != null) {
-            user.setLastName(userCreateDTO.getLastName());
-        }
-        if (userCreateDTO.getEmail() != null) {
-            user.setEmail(userCreateDTO.getEmail());
+        if (userUpdateDTO.getEmail() != null &&
+                !userUpdateDTO.getEmail().equals(user.getEmail()) &&
+                userRepository.findByEmail(userUpdateDTO.getEmail()).isPresent()) {
+            throw new ResourceAlreadyExistsException("User with this email already exists");
         }
 
-        User updatedUser = userRepository.save(user);
-        UserDTO userDTO = userMapper.toUserDTO(updatedUser);
-        return ResponseEntity.ok(userDTO);
+        userMapper.updateEntityFromDTO(userUpdateDTO, user);
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(userMapper.toUserDTO(user));
     }
 
     @GetMapping("/{id}")

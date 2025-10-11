@@ -9,15 +9,15 @@ import lombok.Setter;
 @Setter
 @Getter
 public class UserCreateDTO {
-    @NotBlank
+    @NotBlank(message = "First name is required")
     @Size(min = 2, max = 50)
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Last name is required")
     @Size(min = 2, max = 50)
     private String lastName;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
     private String email;
 }
