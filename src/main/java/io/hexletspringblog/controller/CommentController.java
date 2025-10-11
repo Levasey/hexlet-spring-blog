@@ -7,6 +7,7 @@ import io.hexletspringblog.model.Comment;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,7 +43,7 @@ public class CommentController {
 
     @PostMapping("")
     @ResponseStatus(HttpStatus.CREATED)
-    public CommentDTO create(@RequestBody CommentDTO commentDTO) {
+    public CommentDTO create(@Valid @RequestBody CommentDTO commentDTO) {
         Post post = postRepository.findById(commentDTO.getPostId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
         Comment comment = commentMapper.toEntity(commentDTO);

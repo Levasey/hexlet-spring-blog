@@ -2,6 +2,7 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostPatchDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -60,6 +62,20 @@ public class PostController {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
         postMapper.updateEntityFromDTO(postUpdateDTO, post);
+
+        postRepository.save(post);
+        return ResponseEntity.ok(postMapper.toDTO(post));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<PostDTO> patchPost(@PathVariable Long id,
+                                             @RequestBody PostPatchDTO dto) {
+        var post = postRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        dto.getTitle().ifPresent(post::setTitle);
+        dto.getContent().ifPresent(post::setContent);
+        dto.getPublished().ifPresent(post::setPublished);
 
         postRepository.save(post);
         return ResponseEntity.ok(postMapper.toDTO(post));

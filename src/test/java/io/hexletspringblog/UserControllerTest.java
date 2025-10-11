@@ -1,5 +1,6 @@
 package io.hexletspringblog;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +11,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hexletspringblog.dto.UserPatchDTO;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
@@ -18,6 +20,8 @@ import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openapitools.jackson.nullable.JsonNullable;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -47,12 +51,17 @@ class UserControllerTest {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     void setUp() {
         // Очищаем базу данных перед каждым тестом
         commentRepository.deleteAll();
         postRepository.deleteAll();
         userRepository.deleteAll();
+
+        objectMapper.registerModule(new JsonNullableModule());
     }
 
     @Test
@@ -118,6 +127,25 @@ class UserControllerTest {
         user = userRepository.findById(user.getId()).get();
 
         assertThat(user.getFirstName()).isEqualTo(data.get("firstName"));
+    }
+
+    @Test
+    void testPatch() throws Exception {
+        var user = generateUser();
+        userRepository.save(user);
+
+        var patchDTO = new UserPatchDTO();
+        patchDTO.setFirstName(JsonNullable.of("newFirstName"));
+
+        var request = patch("/api/users/" + user.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(patchDTO));
+
+        mockMvc.perform(request).andExpect(status().isOk());
+
+        user = userRepository.findById(user.getId()).get();
+
+        assertThat(user.getFirstName()).isEqualTo("newFirstName");
     }
 
     @Test

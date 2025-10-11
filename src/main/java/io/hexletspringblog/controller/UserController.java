@@ -2,6 +2,7 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
+import io.hexletspringblog.dto.UserPatchDTO;
 import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -60,16 +62,28 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toUserDTO(user));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<UserDTO> patchUser(@PathVariable Long id,
+                                             @RequestBody UserPatchDTO dto) {
+        var user = userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        dto.getFirstName().ifPresent(user::setFirstName);
+        dto.getLastName().ifPresent(user::setLastName);
+        dto.getEmail().ifPresent(user::setEmail);
+
+        userRepository.save(user);
+        return ResponseEntity.ok(userMapper.toUserDTO(user));
+    }
+
     @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<User> showUser(@PathVariable Long id) {
+    public ResponseEntity<UserDTO> showUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(userMapper.toUserDTO(user));
     }
 
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found with id: " + id);
