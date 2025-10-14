@@ -108,7 +108,7 @@ class PostControllerTest {
 
         // Create PostCreateDTO with userId
         PostCreateDTO postCreateDTO = generatePostCreateDTO();
-        postCreateDTO.setUserId(user.getId()); // Устанавливаем userId
+        postCreateDTO.setUserId(user.getId());
 
         var request = post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -215,8 +215,7 @@ class PostControllerTest {
                 .ignore(Select.field(Post::getComments))
                 .supply(Select.field(Post::getTitle), () -> "title")
                 .supply(Select.field(Post::getContent), () -> "content content")
-                .supply(Select.field(Post::getAuthor), () -> "author")
-                .set(Select.field(Post::getUser), user)
+                .set(Select.field(Post::getAuthor), user)
                 .create();
     }
 

@@ -50,8 +50,6 @@ public class ModelGenerator {
             // Generate content that fits within 2-30 characters
             String shortContent = faker.lorem().characters(10, 30); // Generates 10-30 characters
             post.setContent(shortContent);
-
-            post.setAuthor(faker.name().fullName());
             post.setPublished(faker.bool().bool());
             postRepository.save(post);
         }

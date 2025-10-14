@@ -51,9 +51,6 @@ class UserControllerTest {
     @Autowired
     private PostRepository postRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @BeforeEach
     void setUp() {
         // Очищаем базу данных перед каждым тестом
@@ -61,7 +58,7 @@ class UserControllerTest {
         postRepository.deleteAll();
         userRepository.deleteAll();
 
-        objectMapper.registerModule(new JsonNullableModule());
+        om.registerModule(new JsonNullableModule());
     }
 
     @Test

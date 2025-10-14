@@ -7,8 +7,10 @@ import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
+import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
+import io.hexletspringblog.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class PostController {
     @Autowired
     private PostRepository postRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private PostMapper postMapper;
@@ -42,10 +47,13 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<PostDTO> createPost(@Valid @RequestBody PostCreateDTO postCreateDTO) {
+        User user = userRepository.findById(postCreateDTO.getUserId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
         Post post = postMapper.toEntity(postCreateDTO);
-        Post saved = postRepository.save(post);
-        PostDTO postDTO = postMapper.toDTO(saved);
-        return ResponseEntity.status(HttpStatus.CREATED).body(postDTO);
+        post.setAuthor(user);
+        postRepository.save(post);
+        return ResponseEntity.status(HttpStatus.CREATED).body(postMapper.toDTO(post));
     }
 
     @GetMapping("/{id}") // Вывод поста

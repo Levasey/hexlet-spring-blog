@@ -30,8 +30,6 @@ public class Post {
     @NotBlank(message = "Content cannot be blank")
     private String content;
 
-    private String author;
-
     private boolean published;
 
     @CreatedDate
@@ -43,9 +41,9 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "user_id")
-    private User user;
+    private User author;
 
     public void addComment(Comment comment) {
         comments.add(comment);

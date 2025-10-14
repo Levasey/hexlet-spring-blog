@@ -130,7 +130,13 @@ class CommentControllerTest {
                 .content(om.writeValueAsString(commentDTO));
 
         mockMvc.perform(request)
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(result -> {
+                    // Для диагностики можно добавить вывод информации об ошибке
+                    if (result.getResolvedException() != null) {
+                        System.out.println("Resolved exception: " + result.getResolvedException().getMessage());
+                    }
+                });
     }
 
     @Test
@@ -168,7 +174,7 @@ class CommentControllerTest {
 
         Map<String, Object> updates = new HashMap<>();
         updates.put("body", "Updated comment body");
-        // Не передаем postId - должен остаться прежним
+        // postId не отправляем - он не обязателен
 
         var request = put("/api/comments/" + comment.getId())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -268,7 +274,7 @@ class CommentControllerTest {
                 .supply(Select.field(Post::getTitle), () -> "Test Post")
                 .supply(Select.field(Post::getContent), () -> "Test Content")
                 .supply(Select.field(Post::getAuthor), () -> "Test Author")
-                .set(Select.field(Post::getUser), user)
+                .set(Select.field(Post::getAuthor), user)
                 .create();
     }
 
