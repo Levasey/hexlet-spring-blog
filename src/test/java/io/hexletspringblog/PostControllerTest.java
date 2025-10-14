@@ -47,15 +47,12 @@ class PostControllerTest {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @BeforeEach
     void setUp() {
         postRepository.deleteAll();
         userRepository.deleteAll();
 
-        objectMapper.registerModule(new JsonNullableModule());
+        om.registerModule(new JsonNullableModule());
     }
 
     @Test
