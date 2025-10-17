@@ -75,14 +75,8 @@ public class CommentController {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
 
-        // Если меняется пост, проверяем его существование
-        if (commentUpdateDTO.getPostId() != null && !commentUpdateDTO.getPostId().equals(comment.getPost().getId())) {
-            Post post = postRepository.findById(commentUpdateDTO.getPostId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + commentUpdateDTO.getPostId()));
-            comment.setPost(post);
-        }
 
-        comment.setBody(commentUpdateDTO.getBody());
+        comment.setBody(String.valueOf(commentUpdateDTO.getBody()));
 
         Comment updated = commentRepository.save(comment);
         CommentDTO updatedDTO = commentMapper.map(updated);

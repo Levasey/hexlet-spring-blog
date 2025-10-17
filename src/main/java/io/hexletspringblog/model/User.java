@@ -21,7 +21,6 @@ import java.util.List;
 @Getter
 @Entity
 @Table(name = "users")
-@EqualsAndHashCode(of = {"lastName", "email"})
 @EntityListeners(AuditingEntityListener.class)
 public class User {
     @Id

@@ -15,6 +15,7 @@ import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.PostRepository;
+import io.hexletspringblog.repository.UserRepository;
 import org.instancio.Instancio;
 import org.instancio.Model;
 import org.instancio.Select;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.JwtRequestPostProcessor;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,6 +37,7 @@ import net.datafaker.Faker;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@WithMockUser
 public class PostsControllerTest {
 
     @Autowired
@@ -50,6 +53,9 @@ public class PostsControllerTest {
     private PostRepository postRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private Faker faker;
 
     private User testUser;
@@ -57,16 +63,26 @@ public class PostsControllerTest {
 
     @BeforeEach
     public void setUp() {
+        // Очищаем базу данных перед каждым тестом
+        postRepository.deleteAll();
+        userRepository.deleteAll();
+
+        // Создаем и сохраняем тестового пользователя
         testUser = Instancio.of(User.class)
-                .ignore(Select.field(Post::getId))
+                .ignore(Select.field(User::getId))
+                .supply(Select.field(User::getFirstName), () -> "Test")
+                .supply(Select.field(User::getLastName), () -> "User")
                 .supply(Select.field(User::getEmail), () -> faker.internet().emailAddress())
                 .create();
+        testUser = userRepository.save(testUser); // Сохраняем пользователя
 
+        // Создаем тестовый пост с сохраненным пользователем
         testPost = Instancio.of(Post.class)
                 .ignore(Select.field(Post::getId))
                 .supply(Select.field(Post::getName), () -> faker.gameOfThrones().house())
                 .supply(Select.field(Post::getBody), () -> faker.gameOfThrones().quote())
-                .supply(Select.field(Post::getAuthor), () -> testUser)
+                .supply(Select.field(Post::getSlug), () -> faker.internet().slug())
+                .set(Select.field(Post::getAuthor), testUser) // Используем сохраненного пользователя
                 .create();
     }
 
@@ -75,8 +91,7 @@ public class PostsControllerTest {
         postRepository.save(testPost);
 
         var result = mockMvc.perform(get("/api/posts"))
-                .andExpect(status()
-                        .isOk())
+                .andExpect(status().isOk())
                 .andReturn();
         var body = result.getResponse().getContentAsString();
         assertThatJson(body).isArray();
