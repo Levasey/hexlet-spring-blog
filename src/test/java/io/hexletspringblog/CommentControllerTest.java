@@ -270,9 +270,8 @@ class CommentControllerTest {
     private Post generatePost(User user) {
         return Instancio.of(Post.class)
                 .ignore(Select.field(Post::getId))
-                .ignore(Select.field(Post::getComments))
-                .supply(Select.field(Post::getTitle), () -> "Test Post")
-                .supply(Select.field(Post::getContent), () -> "Test Content")
+                .supply(Select.field(Post::getName), () -> "Test Post")
+                .supply(Select.field(Post::getBody), () -> "Test Content")
                 .supply(Select.field(Post::getAuthor), () -> "Test Author")
                 .set(Select.field(Post::getAuthor), user)
                 .create();

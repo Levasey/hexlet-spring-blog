@@ -1,19 +1,23 @@
 package io.hexletspringblog.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import org.openapitools.jackson.nullable.JsonNullable;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
 @Setter
+@Getter
 public class PostUpdateDTO {
+    @NotNull
+    private JsonNullable<Long> authorId;
 
-    @NotBlank
-    @Size(min = 3, max = 100)
-    private String title;
+    @NotNull
+    private JsonNullable<String> slug;
 
-    @NotBlank
-    @Size(min = 10)
-    private String content;
+    @NotNull
+    private JsonNullable<String> name;
+
+    @NotNull
+    private JsonNullable<String> body;
 }

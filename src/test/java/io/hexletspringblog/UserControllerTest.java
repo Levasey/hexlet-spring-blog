@@ -11,7 +11,7 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hexletspringblog.dto.UserPatchDTO;
+import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
@@ -131,7 +131,7 @@ class UserControllerTest {
         var user = generateUser();
         userRepository.save(user);
 
-        var patchDTO = new UserPatchDTO();
+        var patchDTO = new UserUpdateDTO();
         patchDTO.setFirstName(JsonNullable.of("newFirstName"));
 
         var request = patch("/api/users/" + user.getId())

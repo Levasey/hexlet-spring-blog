@@ -5,15 +5,27 @@ import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.model.Post;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(
+        uses = { JsonNullableMapper.class, ReferenceMapper.class },
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface PostMapper {
 
-    PostDTO toDTO(Post post);
+    Post map(PostCreateDTO dto);
 
-    Post toEntity(PostCreateDTO dto);
+    @Mapping(source = "authorId", target = "author.id")
+    Post map(PostDTO model);
 
-    void updateEntityFromDTO(PostUpdateDTO dto, @MappingTarget Post post);
+    @Mapping(source = "author.id", target = "authorId")
+    PostDTO map(Post model);
+
+    void update(PostUpdateDTO dto, @MappingTarget Post model);
 }

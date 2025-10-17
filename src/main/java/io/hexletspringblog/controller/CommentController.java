@@ -41,7 +41,7 @@ public class CommentController {
 
     @GetMapping(path = "")
     public List<CommentDTO> index() {
-        return commentRepository.findAll().stream().map(commentMapper::toDTO).collect(Collectors.toList());
+        return commentRepository.findAll().stream().map(commentMapper::map).collect(Collectors.toList());
     }
 
     @PostMapping
@@ -54,11 +54,11 @@ public class CommentController {
         Post post = postRepository.findById(commentDTO.getPostId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + commentDTO.getPostId())); // Используем ResourceNotFoundException
 
-        Comment comment = commentMapper.toEntity(commentDTO);
+        Comment comment = commentMapper.map(commentDTO);
         comment.setPost(post); // Устанавливаем связь с постом
 
         Comment saved = commentRepository.save(comment);
-        CommentDTO savedDTO = commentMapper.toDTO(saved);
+        CommentDTO savedDTO = commentMapper.map(saved);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDTO);
     }
@@ -67,7 +67,7 @@ public class CommentController {
     public CommentDTO show(@PathVariable long id) {
         Comment comment = commentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment with id " + id + " not found"));
-        return commentMapper.toDTO(comment);
+        return commentMapper.map(comment);
     }
 
     @PutMapping("/{id}")
@@ -85,7 +85,7 @@ public class CommentController {
         comment.setBody(commentUpdateDTO.getBody());
 
         Comment updated = commentRepository.save(comment);
-        CommentDTO updatedDTO = commentMapper.toDTO(updated);
+        CommentDTO updatedDTO = commentMapper.map(updated);
 
         return ResponseEntity.ok(updatedDTO);
     }

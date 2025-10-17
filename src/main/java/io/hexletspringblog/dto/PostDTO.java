@@ -1,21 +1,17 @@
 package io.hexletspringblog.dto;
 
+import java.time.LocalDate;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Setter
 @Getter
 public class PostDTO {
     private Long id;
-    private String title;
-    private String content;
-    private boolean published;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
-    private Long userId;
-    private List<CommentDTO> comments = new ArrayList<>();
+    private Long authorId;
+    private String slug;
+    private String name;
+    private String body;
+    private LocalDate createdAt;
 }

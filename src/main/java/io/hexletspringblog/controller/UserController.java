@@ -2,7 +2,6 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
-import io.hexletspringblog.dto.UserPatchDTO;
 import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
@@ -30,7 +29,7 @@ public class UserController {
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream().map(userMapper::toUserDTO).toList();
+        return userRepository.findAll().stream().map(userMapper::map).toList();
     }
 
     @PostMapping
@@ -38,9 +37,9 @@ public class UserController {
         if (userRepository.findByEmail(userCreateDTO.getEmail()).isPresent()) {
             throw new ResourceAlreadyExistsException("User with this email already exists");
         }
-        User user = userMapper.toEntity(userCreateDTO);
+        User user = userMapper.map(userCreateDTO);
         User saved = userRepository.save(user);
-        UserDTO userDTO = userMapper.toUserDTO(saved);
+        UserDTO userDTO = userMapper.map(saved);
         return ResponseEntity.status(HttpStatus.CREATED).body(userDTO);
     }
 
@@ -49,38 +48,18 @@ public class UserController {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found"));
 
-        if (userUpdateDTO.getEmail() != null &&
-                !userUpdateDTO.getEmail().equals(user.getEmail()) &&
-                userRepository.findByEmail(userUpdateDTO.getEmail()).isPresent()) {
-            throw new ResourceAlreadyExistsException("User with this email already exists");
-        }
-
-        userMapper.updateEntityFromDTO(userUpdateDTO, user);
+        userMapper.update(userUpdateDTO, user);
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(userMapper.toUserDTO(user));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<UserDTO> patchUser(@PathVariable Long id,
-                                             @RequestBody UserPatchDTO dto) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        dto.getFirstName().ifPresent(user::setFirstName);
-        dto.getLastName().ifPresent(user::setLastName);
-        dto.getEmail().ifPresent(user::setEmail);
-
-        userRepository.save(user);
-        return ResponseEntity.ok(userMapper.toUserDTO(user));
+        return ResponseEntity.ok(userMapper.map(user));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> showUser(@PathVariable Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return ResponseEntity.ok(userMapper.toUserDTO(user));
+        return ResponseEntity.ok(userMapper.map(user));
     }
 
     @DeleteMapping("/{id}")

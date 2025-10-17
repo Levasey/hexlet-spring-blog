@@ -53,6 +53,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    testImplementation("org.springframework.security:spring-security-test")
 
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
@@ -62,7 +64,7 @@ dependencies {
     testAnnotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
-    testImplementation("org.instancio:instancio-junit:3.3.0")
+    testImplementation ("org.instancio:instancio-junit:5.5.1")
     implementation("net.datafaker:datafaker:2.4.2")
     testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
 

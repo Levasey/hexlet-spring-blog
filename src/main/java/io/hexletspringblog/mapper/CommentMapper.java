@@ -8,8 +8,8 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CommentMapper {
     @Mapping(source = "post.id", target = "postId")
-    CommentDTO toDTO(Comment comment);
+    CommentDTO map(Comment comment);
 
     @Mapping(source = "postId", target = "post.id")
-    Comment toEntity(CommentDTO commentDTO);
+    Comment map(CommentDTO commentDTO);
 }

@@ -1,20 +1,21 @@
 package io.hexletspringblog.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
 @Setter
+@Getter
 public class PostCreateDTO {
-    @NotBlank
-    @Size(min = 3, max = 100)
-    private String title;
+    @NotNull
+    private Long authorId;
 
-    @NotBlank
-    @Size(min = 10)
-    private String content;
+    @NotNull
+    private String slug;
 
-    private Long userId;
+    @NotNull
+    private String name;
+
+    @NotNull
+    private String body;
 }

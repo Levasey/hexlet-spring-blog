@@ -4,15 +4,19 @@ import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
 import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
+import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(
+        uses = { JsonNullableMapper.class, ReferenceMapper.class },
+        componentModel = MappingConstants.ComponentModel.SPRING,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE
+)
 public interface UserMapper {
 
-    UserDTO toUserDTO(User user);
+    UserDTO map(User user);
 
-    User toEntity(UserCreateDTO userCreateDTO);
+    User map(UserCreateDTO userCreateDTO);
 
-    void updateEntityFromDTO(UserUpdateDTO userUpdateDTO, @MappingTarget User user);
+    void update(UserUpdateDTO userUpdateDTO, @MappingTarget User user);
 }
