@@ -1,5 +1,6 @@
 package io.hexletspringblog.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,6 +28,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "author", cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<Post> posts = new ArrayList<>();
+
     @NotBlank(message = "FirstName cannot be blank")
     @Size(min = 2, max = 30, message = "FirstName must be between 2 and 30 characters")
     private String firstName;
@@ -40,9 +45,6 @@ public class User {
     private String email;
 
     private LocalDate birthday;
-
-    @OneToMany(mappedBy = "author", cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Post> posts = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;

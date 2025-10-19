@@ -1,10 +1,14 @@
 package io.hexletspringblog.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -18,10 +22,37 @@ import java.util.List;
 @Entity
 @Table(name = "posts")
 @EntityListeners(AuditingEntityListener.class)
-public class Post {
+public class Post implements BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ToString.Include
+    @EqualsAndHashCode.Include
     private Long id;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @JoinColumn(name = "user_id")
+    private User author;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Comment> comments = new ArrayList<>();
+
+    @ManyToMany
+    @JoinTable(
+            name = "post_tag",
+            joinColumns = @JoinColumn(name = "post_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Tag> tags = new ArrayList<>();
+
+    @Column(unique = true)
+    @ToString.Include
+    @NotNull
+    private String slug;
 
     @NotBlank(message = "Title cannot be blank")
     @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
@@ -38,13 +69,6 @@ public class Post {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Comment> comments = new ArrayList<>();
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name = "user_id")
-    private User author;
-
     public void addComment(Comment comment) {
         comments.add(comment);
         comment.setPost(this);
@@ -53,5 +77,15 @@ public class Post {
     public void removeComment(Comment comment) {
         comments.remove(comment);
         comment.setPost(null);
+    }
+
+    public void addTag(Tag tag) {
+        tags.add(tag);
+        tag.getPosts().add(this);
+    }
+
+    public void removeTag(Tag tag) {
+        tags.remove(tag);
+        tag.getPosts().remove(this);
     }
 }

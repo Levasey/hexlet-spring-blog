@@ -57,24 +57,30 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    implementation("org.mapstruct:mapstruct:1.5.5.Final")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    testAnnotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
+    implementation("org.mapstruct:mapstruct:1.6.3")
+    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
+    testAnnotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
     implementation("org.openapitools:jackson-databind-nullable:0.2.6")
 
     testImplementation("org.instancio:instancio-junit:3.3.0")
     implementation("net.datafaker:datafaker:2.4.2")
     testImplementation("net.javacrumbs.json-unit:json-unit-assertj:4.1.1")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        // Exclude older versions if needed
+        exclude(group = "org.mockito", module = "mockito-core")
+    }
+
+    // Explicitly include Mockito
+    testImplementation("org.mockito:mockito-core:5.14.2")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.14.2")
+
     runtimeOnly("com.h2database:h2")
 
     testCompileOnly("org.projectlombok:lombok")
     testAnnotationProcessor("org.projectlombok:lombok")
 
     developmentOnly("org.springframework.boot:spring-boot-devtools")
-    implementation("org.mapstruct:mapstruct:1.6.3")
-    annotationProcessor("org.mapstruct:mapstruct-processor:1.6.3")
 }
 
 tasks.jacocoTestReport {
@@ -112,6 +118,12 @@ tasks.withType<Test> {
     // Добавьте эту конфигурацию для лучшей обработки тестов
     systemProperty("spring.profiles.active", "test")
     systemProperty("java.awt.headless", "true")
+
+    // Add these to handle Mockito warnings
+    jvmArgs = listOf(
+        "-XX:+EnableDynamicAgentLoading",
+        "-Djdk.instrument.traceUsage=false"
+    )
 }
 
 // Добавьте задачу для очистки перед тестированием

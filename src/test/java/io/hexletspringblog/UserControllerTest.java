@@ -11,7 +11,6 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hexletspringblog.dto.UserPatchDTO;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.CommentRepository;
 import io.hexletspringblog.repository.PostRepository;
@@ -124,25 +123,6 @@ class UserControllerTest {
         user = userRepository.findById(user.getId()).get();
 
         assertThat(user.getFirstName()).isEqualTo(data.get("firstName"));
-    }
-
-    @Test
-    void testPatch() throws Exception {
-        var user = generateUser();
-        userRepository.save(user);
-
-        var patchDTO = new UserPatchDTO();
-        patchDTO.setFirstName(JsonNullable.of("newFirstName"));
-
-        var request = patch("/api/users/" + user.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(patchDTO));
-
-        mockMvc.perform(request).andExpect(status().isOk());
-
-        user = userRepository.findById(user.getId()).get();
-
-        assertThat(user.getFirstName()).isEqualTo("newFirstName");
     }
 
     @Test

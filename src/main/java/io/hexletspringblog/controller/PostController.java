@@ -2,100 +2,53 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
-import io.hexletspringblog.dto.PostPatchDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
-import io.hexletspringblog.exception.ResourceNotFoundException;
-import io.hexletspringblog.mapper.PostMapper;
-import io.hexletspringblog.model.Post;
-import io.hexletspringblog.model.User;
-import io.hexletspringblog.repository.CommentRepository;
-import io.hexletspringblog.repository.PostRepository;
-import io.hexletspringblog.repository.UserRepository;
+import io.hexletspringblog.service.PostService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/posts")
+@RequiredArgsConstructor
 public class PostController {
-    @Autowired
-    private PostRepository postRepository;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PostMapper postMapper;
-
-    @Autowired
-    private CommentRepository commentRepository;
+    private final PostService postService;
 
     @GetMapping
     public Page<PostDTO> index(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return postRepository.findAll(pageable)
-                .map(post -> postMapper.toDTO(post));
+        return postService.findAll(pageable);
     }
 
     @PostMapping
     public ResponseEntity<PostDTO> createPost(@Valid @RequestBody PostCreateDTO postCreateDTO) {
-        User user = userRepository.findById(postCreateDTO.getUserId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        Post post = postMapper.toEntity(postCreateDTO);
-        post.setAuthor(user);
-        postRepository.save(post);
-        return ResponseEntity.status(HttpStatus.CREATED).body(postMapper.toDTO(post));
+        PostDTO createdPost = postService.create(postCreateDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdPost);
     }
 
-    @GetMapping("/{id}") // Вывод поста
+    @GetMapping("/{id}")
     public ResponseEntity<PostDTO> showPost(@PathVariable Long id) {
-        var post = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-        PostDTO postDTO = postMapper.toDTO(post);
+        PostDTO postDTO = postService.findById(id);
         return ResponseEntity.ok(postDTO);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<PostDTO> updatePost(@PathVariable Long id, @Valid @RequestBody PostUpdateDTO postUpdateDTO) {
-        Post post = postRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
-
-        postMapper.updateEntityFromDTO(postUpdateDTO, post);
-
-        postRepository.save(post);
-        return ResponseEntity.ok(postMapper.toDTO(post));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<PostDTO> patchPost(@PathVariable Long id,
-                                             @RequestBody PostPatchDTO dto) {
-        var post = postRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        dto.getTitle().ifPresent(post::setTitle);
-        dto.getContent().ifPresent(post::setContent);
-        dto.getPublished().ifPresent(post::setPublished);
-
-        postRepository.save(post);
-        return ResponseEntity.ok(postMapper.toDTO(post));
+        PostDTO updatedPost = postService.update(id, postUpdateDTO);
+        return ResponseEntity.ok(updatedPost);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        if (!postRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Post not found with id: " + id);
-        }
-        commentRepository.deleteByPostId(id);
-        postRepository.deleteById(id);
+        postService.delete(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }

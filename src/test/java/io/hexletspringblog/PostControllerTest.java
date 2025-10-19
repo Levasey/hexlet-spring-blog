@@ -1,27 +1,22 @@
 package io.hexletspringblog;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.dto.PostCreateDTO;
-import io.hexletspringblog.dto.PostPatchDTO;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
+import io.hexletspringblog.model.Tag;
 import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
+import io.hexletspringblog.repository.TagRepository;
 import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +24,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -47,9 +44,13 @@ class PostControllerTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private TagRepository tagRepository;
+
     @BeforeEach
     void setUp() {
         postRepository.deleteAll();
+        tagRepository.deleteAll(); // Clear tags first
         userRepository.deleteAll();
 
         om.registerModule(new JsonNullableModule());
@@ -60,7 +61,8 @@ class PostControllerTest {
         // First create a user
         User user = generateUser();
         userRepository.save(user);
-        // Create some test data
+
+        // Create some test data - without tags initially
         Post post = generatePost(user);
         postRepository.save(post);
 
@@ -76,6 +78,34 @@ class PostControllerTest {
 
         // Optional: verify that the content array contains our test post
         assertThatJson(body).node("content").isArray().hasSize(1);
+    }
+
+    @Test
+    void testCreatePostWithTags() throws Exception {
+        // First create a user
+        User user = generateUser();
+        userRepository.save(user);
+
+        // Create tags first
+        Tag tag1 = generateTag("spring-boot");
+        Tag tag2 = generateTag("java");
+        tagRepository.saveAll(List.of(tag1, tag2));
+
+        // Create PostCreateDTO with userId and tag IDs
+        PostCreateDTO postCreateDTO = generatePostCreateDTO();
+        postCreateDTO.setAuthorId(user.getId());
+        postCreateDTO.setTagIds(List.of(tag1.getId(), tag2.getId()));
+
+        var request = post("/api/posts")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(postCreateDTO));
+
+        mockMvc.perform(request)
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value(postCreateDTO.getTitle()))
+                .andExpect(jsonPath("$.content").value(postCreateDTO.getContent()))
+                .andExpect(jsonPath("$.tags").isArray())
+                .andExpect(jsonPath("$.tags.length()").value(2));
     }
 
     @Test
@@ -98,8 +128,6 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.number").value(0));
     }
 
-    // Additional test methods you might want to add:
-
     @Test
     void testCreatePost() throws Exception {
         // First create a user
@@ -108,7 +136,7 @@ class PostControllerTest {
 
         // Create PostCreateDTO with userId
         PostCreateDTO postCreateDTO = generatePostCreateDTO();
-        postCreateDTO.setUserId(user.getId());
+        postCreateDTO.setAuthorId(user.getId());
 
         var request = post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +177,8 @@ class PostControllerTest {
         PostCreateDTO updates = generatePostCreateDTO();
         updates.setTitle("Updated Title");
         updates.setContent("Updated content");
-        updates.setUserId(user.getId()); // Устанавливаем userId
+        updates.setSlug("updated-slug");
+        updates.setAuthorId(user.getId());
 
         var request = put("/api/posts/" + post.getId())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -159,29 +188,6 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Title"))
                 .andExpect(jsonPath("$.content").value("Updated content"));
-    }
-
-    @Test
-    void testPatch() throws Exception {
-        // First create a user
-        User user = generateUser();
-        userRepository.save(user);
-
-        Post post = generatePost(user);
-        postRepository.save(post);
-
-        PostPatchDTO postPatchDTO = new PostPatchDTO();
-        postPatchDTO.setTitle(JsonNullable.of("Updated Title"));
-
-        var request = patch("/api/posts/" + post.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(postPatchDTO));
-
-        mockMvc.perform(request).andExpect(status().isOk());
-
-        post = postRepository.findById(post.getId()).get();
-
-        assertThat(post.getTitle()).isEqualTo("Updated Title");
     }
 
     @Test
@@ -213,9 +219,19 @@ class PostControllerTest {
         return Instancio.of(Post.class)
                 .ignore(Select.field(Post::getId))
                 .ignore(Select.field(Post::getComments))
-                .supply(Select.field(Post::getTitle), () -> "title")
-                .supply(Select.field(Post::getContent), () -> "content content")
+                .ignore(Select.field(Post::getTags)) // Ignore tags to avoid constraint violations
+                .supply(Select.field(Post::getSlug), () -> "test-slug-" + System.currentTimeMillis())
+                .supply(Select.field(Post::getTitle), () -> "Test Title")
+                .supply(Select.field(Post::getContent), () -> "Test content for the post")
                 .set(Select.field(Post::getAuthor), user)
+                .create();
+    }
+
+    private Tag generateTag(String name) {
+        return Instancio.of(Tag.class)
+                .ignore(Select.field(Tag::getId))
+                .ignore(Select.field(Tag::getPosts))
+                .supply(Select.field(Tag::getName), () -> name)
                 .create();
     }
 
@@ -223,6 +239,8 @@ class PostControllerTest {
         PostCreateDTO dto = new PostCreateDTO();
         dto.setTitle("Test Title");
         dto.setContent("Test content for the post");
+        dto.setSlug("test-slug-" + System.currentTimeMillis());
+        dto.setPublished(false);
         return dto;
     }
 }
