@@ -11,11 +11,12 @@ import java.util.List;
 @Getter
 public class PostDTO {
     private Long id;
+    private Long authorId;
+    private String slug;
     private String title;
     private String content;
     private boolean published;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Long userId;
     private List<CommentDTO> comments = new ArrayList<>();
 }

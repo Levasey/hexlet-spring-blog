@@ -2,7 +2,6 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
-import io.hexletspringblog.dto.PostPatchDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
@@ -47,7 +46,7 @@ public class PostController {
 
     @PostMapping
     public ResponseEntity<PostDTO> createPost(@Valid @RequestBody PostCreateDTO postCreateDTO) {
-        User user = userRepository.findById(postCreateDTO.getUserId())
+        User user = userRepository.findById(postCreateDTO.getAuthorId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         Post post = postMapper.toEntity(postCreateDTO);
@@ -70,20 +69,6 @@ public class PostController {
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
         postMapper.updateEntityFromDTO(postUpdateDTO, post);
-
-        postRepository.save(post);
-        return ResponseEntity.ok(postMapper.toDTO(post));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<PostDTO> patchPost(@PathVariable Long id,
-                                             @RequestBody PostPatchDTO dto) {
-        var post = postRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        dto.getTitle().ifPresent(post::setTitle);
-        dto.getContent().ifPresent(post::setContent);
-        dto.getPublished().ifPresent(post::setPublished);
 
         postRepository.save(post);
         return ResponseEntity.ok(postMapper.toDTO(post));

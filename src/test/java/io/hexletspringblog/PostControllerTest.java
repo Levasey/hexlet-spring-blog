@@ -12,7 +12,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.dto.PostCreateDTO;
-import io.hexletspringblog.dto.PostPatchDTO;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.PostRepository;
@@ -21,7 +20,6 @@ import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -108,7 +106,7 @@ class PostControllerTest {
 
         // Create PostCreateDTO with userId
         PostCreateDTO postCreateDTO = generatePostCreateDTO();
-        postCreateDTO.setUserId(user.getId());
+        postCreateDTO.setAuthorId(user.getId());
 
         var request = post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -149,7 +147,8 @@ class PostControllerTest {
         PostCreateDTO updates = generatePostCreateDTO();
         updates.setTitle("Updated Title");
         updates.setContent("Updated content");
-        updates.setUserId(user.getId()); // Устанавливаем userId
+        updates.setSlug("updated-slug");
+        updates.setAuthorId(user.getId());
 
         var request = put("/api/posts/" + post.getId())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -159,29 +158,6 @@ class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Updated Title"))
                 .andExpect(jsonPath("$.content").value("Updated content"));
-    }
-
-    @Test
-    void testPatch() throws Exception {
-        // First create a user
-        User user = generateUser();
-        userRepository.save(user);
-
-        Post post = generatePost(user);
-        postRepository.save(post);
-
-        PostPatchDTO postPatchDTO = new PostPatchDTO();
-        postPatchDTO.setTitle(JsonNullable.of("Updated Title"));
-
-        var request = patch("/api/posts/" + post.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(postPatchDTO));
-
-        mockMvc.perform(request).andExpect(status().isOk());
-
-        post = postRepository.findById(post.getId()).get();
-
-        assertThat(post.getTitle()).isEqualTo("Updated Title");
     }
 
     @Test
@@ -213,6 +189,7 @@ class PostControllerTest {
         return Instancio.of(Post.class)
                 .ignore(Select.field(Post::getId))
                 .ignore(Select.field(Post::getComments))
+                .supply(Select.field(Post::getSlug), () -> "Slug")
                 .supply(Select.field(Post::getTitle), () -> "title")
                 .supply(Select.field(Post::getContent), () -> "content content")
                 .set(Select.field(Post::getAuthor), user)
@@ -223,6 +200,7 @@ class PostControllerTest {
         PostCreateDTO dto = new PostCreateDTO();
         dto.setTitle("Test Title");
         dto.setContent("Test content for the post");
+        dto.setSlug("test-slug");
         return dto;
     }
 }

@@ -2,9 +2,12 @@ package io.hexletspringblog.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -18,10 +21,21 @@ import java.util.List;
 @Entity
 @Table(name = "posts")
 @EntityListeners(AuditingEntityListener.class)
-public class Post {
+public class Post implements BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ToString.Include
+    @EqualsAndHashCode.Include
     private Long id;
+
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @JoinColumn(name = "user_id")
+    private User author;
+
+    @Column(unique = true)
+    @ToString.Include
+    @NotNull
+    private String slug;
 
     @NotBlank(message = "Title cannot be blank")
     @Size(min = 2, max = 100, message = "Title must be between 2 and 100 characters")
@@ -40,10 +54,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
-
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name = "user_id")
-    private User author;
 
     public void addComment(Comment comment) {
         comments.add(comment);

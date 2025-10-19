@@ -2,7 +2,6 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
-import io.hexletspringblog.dto.UserPatchDTO;
 import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
@@ -59,20 +58,6 @@ public class UserController {
 
         userRepository.save(user);
 
-        return ResponseEntity.ok(userMapper.toUserDTO(user));
-    }
-
-    @PatchMapping("/{id}")
-    public ResponseEntity<UserDTO> patchUser(@PathVariable Long id,
-                                             @RequestBody UserPatchDTO dto) {
-        var user = userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        dto.getFirstName().ifPresent(user::setFirstName);
-        dto.getLastName().ifPresent(user::setLastName);
-        dto.getEmail().ifPresent(user::setEmail);
-
-        userRepository.save(user);
         return ResponseEntity.ok(userMapper.toUserDTO(user));
     }
 

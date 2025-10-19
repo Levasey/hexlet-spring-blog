@@ -45,7 +45,9 @@ public class ModelGenerator {
 
             // Create and save Post with shorter content
             var post = new Post();
+            post.setAuthor(user);
             post.setTitle(faker.book().title());
+            post.setSlug(faker.book().title());
 
             // Generate content that fits within 2-30 characters
             String shortContent = faker.lorem().characters(10, 30); // Generates 10-30 characters
