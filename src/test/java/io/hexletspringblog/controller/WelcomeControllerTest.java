@@ -1,4 +1,4 @@
-package io.hexletspringblog;
+package io.hexletspringblog.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,22 +14,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class HomeControllerTest {
+class WelcomeControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void home_returnsWelcomeMessage() throws Exception {
-        mockMvc.perform(get("/"))
+    void welcome_returnsWelcomeMessageFromProperties() throws Exception {
+        mockMvc.perform(get("/welcome"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Добро пожаловать в Hexlet Spring Blog!"));
-    }
-
-    @Test
-    void about_returnsAboutMessage() throws Exception {
-        mockMvc.perform(get("/about"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("This is simple Spring blog!"));
+                .andExpect(content().string("Welcome to Spring blog!"));
     }
 }

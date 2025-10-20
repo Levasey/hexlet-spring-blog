@@ -1,4 +1,4 @@
-package io.hexletspringblog;
+package io.hexletspringblog.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -256,6 +256,68 @@ class CommentControllerTest {
 
         // Проверяем, что все комментарии возвращаются
         assertThatJson(body).isArray().hasSize(3);
+    }
+
+    @Test
+    void testGetCommentsByPost() throws Exception {
+        // Создаем комментарии для тестового поста
+        Comment comment1 = generateComment(testPost);
+        Comment comment2 = generateComment(testPost);
+        commentRepository.save(comment1);
+        commentRepository.save(comment2);
+
+        // Создаем другой пост и комментарий к нему (не должен попасть в результаты)
+        Post otherPost = generatePost(testUser);
+        postRepository.save(otherPost);
+        Comment otherComment = generateComment(otherPost);
+        commentRepository.save(otherComment);
+
+        var result = mockMvc.perform(get("/api/comments/post/" + testPost.getId()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var body = result.getResponse().getContentAsString();
+
+        // Проверяем, что возвращаются только комментарии для указанного поста
+        assertThatJson(body).isArray().hasSize(2);
+    }
+
+    @Test
+    void testGetCommentsByPost_NotFound() throws Exception {
+        mockMvc.perform(get("/api/comments/post/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void testCreate_WithInvalidData() throws Exception {
+        CommentDTO commentDTO = new CommentDTO();
+        commentDTO.setBody(""); // Пустое тело - должно вызвать ошибку валидации
+        commentDTO.setPostId(testPost.getId());
+
+        var request = post("/api/comments")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(commentDTO));
+
+        mockMvc.perform(request)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.body").exists());
+    }
+
+    @Test
+    void testUpdate_WithInvalidData() throws Exception {
+        Comment comment = generateComment(testPost);
+        commentRepository.save(comment);
+
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("body", ""); // Пустое тело - должно вызвать ошибку валидации
+
+        var request = put("/api/comments/" + comment.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(om.writeValueAsString(updates));
+
+        mockMvc.perform(request)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.body").exists());
     }
 
     private User generateUser() {

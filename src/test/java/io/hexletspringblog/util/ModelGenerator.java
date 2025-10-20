@@ -1,4 +1,4 @@
-package io.hexletspringblog;
+package io.hexletspringblog.util;
 
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;

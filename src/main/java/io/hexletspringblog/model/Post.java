@@ -88,4 +88,12 @@ public class Post implements BaseEntity {
         tags.remove(tag);
         tag.getPosts().remove(this);
     }
+
+    // Добавьте методы для безопасной работы с коллекцией tags
+    public void setTags(List<Tag> tags) {
+        this.tags.clear();
+        if (tags != null) {
+            this.tags.addAll(tags);
+        }
+    }
 }

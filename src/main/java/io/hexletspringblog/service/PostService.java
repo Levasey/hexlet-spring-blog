@@ -14,7 +14,6 @@ import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.repository.UserRepository;
 import io.hexletspringblog.specification.PostSpecification;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -58,7 +57,7 @@ public class PostService {
         // Handle tags if provided
         if (postCreateDTO.getTagIds() != null && !postCreateDTO.getTagIds().isEmpty()) {
             List<Tag> tags = tagRepository.findAllById(postCreateDTO.getTagIds());
-            post.setTags(tags);
+            post.setTags(tags); // Используем безопасный метод
         }
 
         Post savedPost = postRepository.save(post);
@@ -74,7 +73,7 @@ public class PostService {
         // Handle tags update if provided
         if (postUpdateDTO.getTagIds() != null && postUpdateDTO.getTagIds().isPresent()) {
             List<Tag> tags = tagRepository.findAllById(postUpdateDTO.getTagIds().get());
-            post.setTags(tags);
+            post.setTags(tags); // Используем безопасный метод
         }
 
         Post updatedPost = postRepository.save(post);

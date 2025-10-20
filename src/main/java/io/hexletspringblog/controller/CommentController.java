@@ -2,100 +2,56 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.CommentDTO;
 import io.hexletspringblog.dto.CommentUpdateDTO;
-import io.hexletspringblog.exception.ResourceNotFoundException;
-import io.hexletspringblog.mapper.CommentMapper;
-import io.hexletspringblog.model.Comment;
-import io.hexletspringblog.model.Post;
-import io.hexletspringblog.repository.CommentRepository;
-import io.hexletspringblog.repository.PostRepository;
+import io.hexletspringblog.service.CommentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {
 
-    @Autowired
-    private CommentRepository commentRepository;
+    private final CommentService commentService;
 
     @Autowired
-    private PostRepository postRepository;
-
-    @Autowired
-    private CommentMapper commentMapper;
+    public CommentController(CommentService commentService) {
+        this.commentService = commentService;
+    }
 
     @GetMapping(path = "")
     public List<CommentDTO> index() {
-        return commentRepository.findAll().stream().map(commentMapper::toDTO).collect(Collectors.toList());
+        return commentService.findAll();
     }
 
     @PostMapping
     public ResponseEntity<CommentDTO> create(@Valid @RequestBody CommentDTO commentDTO) {
-        // Проверяем существование поста
-        if (commentDTO.getPostId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Post ID is required");
-        }
-
-        Post post = postRepository.findById(commentDTO.getPostId())
-                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + commentDTO.getPostId())); // Используем ResourceNotFoundException
-
-        Comment comment = commentMapper.toEntity(commentDTO);
-        comment.setPost(post); // Устанавливаем связь с постом
-
-        Comment saved = commentRepository.save(comment);
-        CommentDTO savedDTO = commentMapper.toDTO(saved);
-
+        CommentDTO savedDTO = commentService.create(commentDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDTO);
     }
 
     @GetMapping(path = "/{id}")
     public CommentDTO show(@PathVariable long id) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment with id " + id + " not found"));
-        return commentMapper.toDTO(comment);
+        return commentService.findById(id);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<CommentDTO> update(@PathVariable long id, @Valid @RequestBody CommentUpdateDTO commentUpdateDTO) {
-        Comment comment = commentRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Comment not found with id: " + id));
-
-        // Если меняется пост, проверяем его существование
-        if (commentUpdateDTO.getPostId() != null && !commentUpdateDTO.getPostId().equals(comment.getPost().getId())) {
-            Post post = postRepository.findById(commentUpdateDTO.getPostId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + commentUpdateDTO.getPostId()));
-            comment.setPost(post);
-        }
-
-        comment.setBody(commentUpdateDTO.getBody());
-
-        Comment updated = commentRepository.save(comment);
-        CommentDTO updatedDTO = commentMapper.toDTO(updated);
-
+        CommentDTO updatedDTO = commentService.update(id, commentUpdateDTO);
         return ResponseEntity.ok(updatedDTO);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void destroy(@PathVariable long id) {
-        if (!commentRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Comment with id " + id + " not found");
-        }
-        commentRepository.deleteById(id);
+        commentService.delete(id);
+    }
+
+    @GetMapping("/post/{postId}")
+    public List<CommentDTO> getCommentsByPost(@PathVariable Long postId) {
+        return commentService.findByPostId(postId);
     }
 }

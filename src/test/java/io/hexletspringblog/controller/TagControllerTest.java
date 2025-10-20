@@ -1,9 +1,7 @@
-package io.hexletspringblog;
+package io.hexletspringblog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.hexletspringblog.controller.TagController;
 import io.hexletspringblog.dto.TagCreateDTO;
-import io.hexletspringblog.dto.TagDTO;
 import io.hexletspringblog.dto.TagUpdateDTO;
 import io.hexletspringblog.model.Tag;
 import io.hexletspringblog.repository.TagRepository;
