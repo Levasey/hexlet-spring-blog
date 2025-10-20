@@ -76,6 +76,17 @@ public class TagService {
 
     // Bulk operations
     public List<TagDTO> createBulk(List<TagCreateDTO> tagCreateDTOs) {
+        // Check for duplicates in the request
+        List<String> names = tagCreateDTOs.stream()
+                .map(TagCreateDTO::getName)
+                .toList();
+
+        List<Tag> existingTags = tagRepository.findByNames(names);
+        if (!existingTags.isEmpty()) {
+            throw new IllegalArgumentException("Some tags already exist: " +
+                    existingTags.stream().map(Tag::getName).toList());
+        }
+
         List<Tag> tags = tagCreateDTOs.stream()
                 .map(tagMapper::toTag)
                 .toList();
@@ -89,6 +100,13 @@ public class TagService {
     @Transactional(readOnly = true)
     public List<TagDTO> findByIds(List<Long> ids) {
         return tagRepository.findByIdIn(ids).stream()
+                .map(tagMapper::toTagDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<TagDTO> findByNameContaining(String name) {
+        return tagRepository.findByNameContainingIgnoreCase(name).stream()
                 .map(tagMapper::toTagDTO)
                 .toList();
     }

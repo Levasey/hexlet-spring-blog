@@ -2,10 +2,13 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostParamsDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.service.PostService;
+import io.hexletspringblog.specification.PostSpecification;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,10 +25,11 @@ public class PostController {
 
     @GetMapping
     public Page<PostDTO> index(
+            PostParamsDTO params,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return postService.findAll(pageable);
+        return postService.findAll(params, pageable);
     }
 
     @PostMapping

@@ -2,6 +2,7 @@ package io.hexletspringblog.service;
 
 import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
+import io.hexletspringblog.dto.PostParamsDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
@@ -11,9 +12,12 @@ import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.repository.UserRepository;
+import io.hexletspringblog.specification.PostSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +32,12 @@ public class PostService {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final PostMapper postMapper;
+    private final PostSpecification postSpecification;
 
     @Transactional(readOnly = true)
-    public Page<PostDTO> findAll(Pageable pageable) {
-        return postRepository.findAll(pageable)
+    public Page<PostDTO> findAll(PostParamsDTO params, Pageable pageable) {
+        Specification<Post> spec = postSpecification.build(params);
+        return postRepository.findAll(spec, pageable)
                 .map(postMapper::toDTO);
     }
 
@@ -80,5 +86,23 @@ public class PostService {
             throw new ResourceNotFoundException("Post not found with id: " + id);
         }
         postRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostDTO> findByTagId(Long tagId) {
+        if (!tagRepository.existsById(tagId)) {
+            throw new ResourceNotFoundException("Tag not found with id: " + tagId);
+        }
+
+        return postRepository.findByTagId(tagId).stream()
+                .map(postMapper::toDTO)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostDTO> findByTagIds(List<Long> tagIds) {
+        return postRepository.findByTagIds(tagIds).stream()
+                .map(postMapper::toDTO)
+                .toList();
     }
 }

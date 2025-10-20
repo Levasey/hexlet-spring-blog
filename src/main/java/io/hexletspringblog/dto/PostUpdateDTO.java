@@ -13,9 +13,9 @@ public class PostUpdateDTO {
 
     private JsonNullable<List<Long>> tagIds = JsonNullable.undefined();
 
-    private JsonNullable<Long> authorId;
+    private JsonNullable<String> slug = JsonNullable.undefined();
 
-    private JsonNullable<String> slug;
+    private JsonNullable<Long> authorId = JsonNullable.undefined();
 
     @Size(min = 3, max = 100, message = "Title must be between 3 and 100 characters")
     private JsonNullable<String> title;
