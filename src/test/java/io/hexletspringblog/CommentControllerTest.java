@@ -271,6 +271,7 @@ class CommentControllerTest {
         return Instancio.of(Post.class)
                 .ignore(Select.field(Post::getId))
                 .ignore(Select.field(Post::getComments))
+                .ignore(Select.field(Post::getTags))
                 .supply(Select.field(Post::getTitle), () -> "Test Post")
                 .supply(Select.field(Post::getContent), () -> "Test Content")
                 .supply(Select.field(Post::getAuthor), () -> "Test Author")
