@@ -115,15 +115,19 @@ tasks.withType<Test> {
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
     }
 
-    // Добавьте эту конфигурацию для лучшей обработки тестов
     systemProperty("spring.profiles.active", "test")
     systemProperty("java.awt.headless", "true")
 
-    // Add these to handle Mockito warnings
+    // Правильная конфигурация для Mockito agent
     jvmArgs = listOf(
-        "-XX:+EnableDynamicAgentLoading",
-        "-Djdk.instrument.traceUsage=false"
+        "-javaagent:${classpath.find { it.name.contains("mockito-core") }?.absolutePath}",
+        "-Djdk.instrument.traceUsage=false",
+        "-XX:+EnableDynamicAgentLoading"
     )
+
+    // Убедитесь, что тесты выполняются в правильном порядке
+    failFast = false
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceAtLeast(1)
 }
 
 // Добавьте задачу для очистки перед тестированием
