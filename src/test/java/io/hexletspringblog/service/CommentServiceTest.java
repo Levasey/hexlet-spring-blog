@@ -21,7 +21,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
@@ -181,10 +180,9 @@ class CommentServiceTest {
         // Arrange
         CommentUpdateDTO updateDTO = new CommentUpdateDTO();
         updateDTO.setBody("Updated body");
-        updateDTO.setPostId(1L);
+        // postId не устанавливаем - проверяем обновление только тела комментария
 
         when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
-        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
         when(commentRepository.save(testComment)).thenReturn(testComment);
         when(commentMapper.toDTO(testComment)).thenReturn(testCommentDTO);
 
@@ -194,6 +192,8 @@ class CommentServiceTest {
         // Assert
         assertThat(result.getBody()).isEqualTo("Test comment body");
         verify(commentRepository).save(testComment);
+        // Проверяем, что postRepository не вызывался, так как postId не менялся
+        verify(postRepository, never()).findById(anyLong());
     }
 
     @Test
@@ -218,6 +218,7 @@ class CommentServiceTest {
         // Assert
         assertThat(testComment.getPost()).isEqualTo(newPost);
         verify(commentRepository).save(testComment);
+        verify(postRepository).findById(2L);
     }
 
     @Test
@@ -232,6 +233,27 @@ class CommentServiceTest {
         assertThatThrownBy(() -> commentService.update(999L, updateDTO))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Comment not found with id: 999");
+    }
+
+    @Test
+    void update_WithSamePostId_ShouldNotCallPostRepository() {
+        // Arrange
+        CommentUpdateDTO updateDTO = new CommentUpdateDTO();
+        updateDTO.setBody("Updated body");
+        updateDTO.setPostId(1L); // Тот же postId, что и у существующего комментария
+
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
+        when(commentRepository.save(testComment)).thenReturn(testComment);
+        when(commentMapper.toDTO(testComment)).thenReturn(testCommentDTO);
+
+        // Act
+        CommentDTO result = commentService.update(1L, updateDTO);
+
+        // Assert
+        assertThat(result.getBody()).isEqualTo("Test comment body");
+        verify(commentRepository).save(testComment);
+        // Проверяем, что postRepository не вызывался, так как postId не изменился
+        verify(postRepository, never()).findById(anyLong());
     }
 
     @Test
