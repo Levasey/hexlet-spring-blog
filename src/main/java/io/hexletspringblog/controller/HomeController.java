@@ -1,18 +1,18 @@
 package io.hexletspringblog.controller;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-@RestController
+@Controller
 public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "Добро пожаловать в Hexlet Spring Blog!";
+        return "index";
     }
 
     @GetMapping("/about")
     public String about() {
-        return "This is simple Spring blog!";
+        return "about";
     }
 }
