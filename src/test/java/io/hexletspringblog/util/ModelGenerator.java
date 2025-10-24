@@ -6,7 +6,9 @@ import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
 import net.datafaker.Faker;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -15,6 +17,9 @@ import java.util.Set;
 
 @Component
 public class ModelGenerator {
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     private final Faker faker;
     private final UserRepository userRepository;
@@ -33,10 +38,12 @@ public class ModelGenerator {
 
         for (int i = 0; i < 5; i++) {
             // Create and save User
+
             var user = new User();
             user.setFirstName(faker.name().firstName());
             user.setLastName(faker.name().lastName());
             user.setEmail(faker.internet().emailAddress());
+            user.setPasswordDigest(passwordEncoder.encode("password"));
 
             // Generate birthday - simple approach
             int age = faker.number().numberBetween(18, 80);

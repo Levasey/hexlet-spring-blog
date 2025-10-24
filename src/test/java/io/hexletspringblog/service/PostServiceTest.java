@@ -26,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,6 +68,7 @@ class PostServiceTest {
         testUser.setFirstName("John");
         testUser.setLastName("Doe");
         testUser.setEmail("john@example.com");
+        testUser.setPasswordDigest("validPassword123");
 
         testTag = new Tag();
         testTag.setId(1L);

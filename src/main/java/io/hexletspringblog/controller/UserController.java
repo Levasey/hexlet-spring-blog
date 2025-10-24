@@ -2,12 +2,14 @@ package io.hexletspringblog.controller;
 
 import io.hexletspringblog.dto.UserCreateDTO;
 import io.hexletspringblog.dto.UserDTO;
+import io.hexletspringblog.dto.UserRegistrationDTO;
 import io.hexletspringblog.dto.UserUpdateDTO;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.UserMapper;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.UserRepository;
+import io.hexletspringblog.service.CustomUserDetailsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,9 @@ public class UserController {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private CustomUserDetailsService userService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -75,5 +80,21 @@ public class UserController {
         }
         userRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
+        if (userService.userExists(registrationDTO.getEmail())) {
+            return ResponseEntity.badRequest().body("User already exists");
+        }
+
+        User user = new User();
+        user.setFirstName(registrationDTO.getFirstName());
+        user.setLastName(registrationDTO.getLastName());
+        user.setEmail(registrationDTO.getEmail());
+        user.setPasswordDigest(registrationDTO.getPassword()); // Будет закодирован в сервисе
+
+        userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User registered successfully");
     }
 }

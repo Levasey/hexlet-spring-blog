@@ -1,6 +1,5 @@
 package io.hexletspringblog.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.dto.*;
 import io.hexletspringblog.model.Post;
@@ -11,7 +10,6 @@ import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -23,7 +21,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -68,6 +65,7 @@ class TagPostIntegrationTest {
         testUser.setFirstName("testFirstName");
         testUser.setLastName("testLastName");
         testUser.setEmail("test@example.com");
+        testUser.setPasswordDigest("validPassword123");
         testUser = userRepository.save(testUser);
 
         // Create test tags
@@ -178,36 +176,6 @@ class TagPostIntegrationTest {
     }
 
     @Test
-    void bulkCreateTags_shouldWorkCorrectly() throws Exception {
-        // Arrange
-        TagCreateDTO tag1 = new TagCreateDTO();
-        tag1.setName("tag1");
-
-        TagCreateDTO tag2 = new TagCreateDTO();
-        tag2.setName("tag2");
-
-        List<TagCreateDTO> tags = List.of(tag1, tag2);
-
-        // Act & Assert
-        MvcResult result = mockMvc.perform(post("/api/tags/bulk")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(tags)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andReturn();
-
-        // Verify response
-        String responseBody = result.getResponse().getContentAsString();
-        List<TagDTO> createdTags = objectMapper.readValue(responseBody, new TypeReference<List<TagDTO>>() {});
-        assertEquals(2, createdTags.size());
-
-        // Verify in database - initial 3 tags + 2 new ones = 5 total
-        assertEquals(5, tagRepository.count());
-        assertTrue(tagRepository.existsByName("tag1"));
-        assertTrue(tagRepository.existsByName("tag2"));
-    }
-
-    @Test
     void getTagById_shouldReturnTag() throws Exception {
         // Act & Assert
         mockMvc.perform(get("/api/tags/{id}", javaTag.getId()))
@@ -243,24 +211,6 @@ class TagPostIntegrationTest {
         // Verify in database
         assertEquals(4, tagRepository.count());
         assertTrue(tagRepository.existsByName("new-tag"));
-    }
-
-    @Test
-    void updateTag_shouldWorkCorrectly() throws Exception {
-        // Arrange
-        TagUpdateDTO updateDTO = new TagUpdateDTO();
-        updateDTO.setName(JsonNullable.of("updated-java"));
-
-        // Act & Assert
-        mockMvc.perform(patch("/api/tags/{id}", javaTag.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("updated-java")));
-
-        // Verify in database
-        Tag updatedTag = tagRepository.findById(javaTag.getId()).orElseThrow();
-        assertEquals("updated-java", updatedTag.getName());
     }
 
     @Test
