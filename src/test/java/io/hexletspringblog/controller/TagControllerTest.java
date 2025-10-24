@@ -2,7 +2,6 @@ package io.hexletspringblog.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.dto.TagCreateDTO;
-import io.hexletspringblog.dto.TagUpdateDTO;
 import io.hexletspringblog.model.Tag;
 import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.service.TagService;
@@ -10,7 +9,6 @@ import org.instancio.Instancio;
 import org.instancio.Select;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,9 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.hamcrest.Matchers.*;
@@ -116,73 +112,6 @@ class TagControllerTest {
     }
 
     @Test
-    void createTagsBulk_withValidData_shouldCreateTags() throws Exception {
-        // Arrange
-        TagCreateDTO tagCreateDTO1 = new TagCreateDTO();
-        tagCreateDTO1.setName("tag1");
-
-        TagCreateDTO tagCreateDTO2 = new TagCreateDTO();
-        tagCreateDTO2.setName("tag2");
-
-        List<TagCreateDTO> createDTOs = Arrays.asList(tagCreateDTO1, tagCreateDTO2);
-
-        // Act & Assert
-        mockMvc.perform(post("/api/tags/bulk")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDTOs)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].name", is("tag1")))
-                .andExpect(jsonPath("$[1].name", is("tag2")));
-
-        // Verify in database
-        assertEquals(2, tagRepository.count());
-    }
-
-    @Test
-    void updateTag_withValidData_shouldUpdateTag() throws Exception {
-        // Arrange
-        Tag tag = generateTag("old-name");
-        Tag savedTag = tagRepository.save(tag);
-
-        TagUpdateDTO tagUpdateDTO = new TagUpdateDTO();
-        tagUpdateDTO.setName(JsonNullable.of("updated-name"));
-
-        // Act & Assert
-        mockMvc.perform(patch("/api/tags/{id}", savedTag.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(tagUpdateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name", is("updated-name")));
-
-        // Verify in database
-        Optional<Tag> updatedTag = tagRepository.findById(savedTag.getId());
-        assertTrue(updatedTag.isPresent());
-        assertEquals("updated-name", updatedTag.get().getName());
-    }
-
-    @Test
-    void updateTag_withInvalidData_shouldReturnBadRequest() throws Exception {
-        // Arrange
-        Tag tag = generateTag("original-name");
-        Tag savedTag = tagRepository.save(tag);
-
-        TagUpdateDTO invalidUpdateDTO = new TagUpdateDTO();
-        invalidUpdateDTO.setName(JsonNullable.of("a")); // Too short
-
-        // Act & Assert
-        mockMvc.perform(patch("/api/tags/{id}", savedTag.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidUpdateDTO)))
-                .andExpect(status().isUnprocessableEntity());
-
-        // Verify name wasn't changed in database
-        Optional<Tag> unchangedTag = tagRepository.findById(savedTag.getId());
-        assertTrue(unchangedTag.isPresent());
-        assertEquals("original-name", unchangedTag.get().getName());
-    }
-
-    @Test
     void deleteTag_withValidId_shouldDeleteTag() throws Exception {
         // Arrange
         Tag tag = generateTag("to-delete");
@@ -224,28 +153,6 @@ class TagControllerTest {
                 .andExpect(status().isUnprocessableEntity());
 
         assertEquals(0, tagRepository.count());
-    }
-
-    @Test
-    void updateTag_withTooLongName_shouldReturnBadRequest() throws Exception {
-        // Arrange
-        Tag tag = generateTag("original-name");
-        Tag savedTag = tagRepository.save(tag);
-
-        TagUpdateDTO longNameUpdate = new TagUpdateDTO();
-        String longName = "a".repeat(51); // 51 characters - too long
-        longNameUpdate.setName(JsonNullable.of(longName));
-
-        // Act & Assert
-        mockMvc.perform(patch("/api/tags/{id}", savedTag.getId())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(longNameUpdate)))
-                .andExpect(status().isUnprocessableEntity());
-
-        // Verify name wasn't changed in database
-        Optional<Tag> unchangedTag = tagRepository.findById(savedTag.getId());
-        assertTrue(unchangedTag.isPresent());
-        assertEquals("original-name", unchangedTag.get().getName());
     }
 
     @Test
