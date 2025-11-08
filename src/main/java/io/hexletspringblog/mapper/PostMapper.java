@@ -18,17 +18,8 @@ public interface PostMapper {
     @Mapping(target = "authorId", source = "author.id")
     PostDTO toDTO(Post post);
 
-    @Mapping(target = "author", source = "authorId")
+    @Mapping(target = "author.id", source = "authorId")
     Post toEntity(PostCreateDTO dto);
 
     void updateEntityFromDTO(PostUpdateDTO dto, @MappingTarget Post post);
-
-    default User mapAuthorIdToUser(Long authorId) {
-        if (authorId == null) {
-            return null;
-        }
-        User user = new User();
-        user.setId(authorId);
-        return user;
-    }
 }
