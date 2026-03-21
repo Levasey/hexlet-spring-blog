@@ -1,7 +1,6 @@
 plugins {
     java
     jacoco
-    kotlin("kapt") version "1.9.25"
     id("org.sonarqube") version "6.3.1.5724"
     id("org.springframework.boot") version "3.5.6"
     id("io.spring.dependency-management") version "1.1.7"
@@ -20,6 +19,11 @@ java {
 repositories {
     mavenCentral()
 }
+
+jacoco {
+    toolVersion = "0.8.14"
+}
+
 
 sonar {
     properties {
@@ -127,13 +131,6 @@ tasks.withType<Test> {
 
     systemProperty("spring.profiles.active", "test")
     systemProperty("java.awt.headless", "true")
-
-    // Правильная конфигурация для Mockito agent
-    jvmArgs = listOf(
-        "-javaagent:${classpath.find { it.name.contains("mockito-core") }?.absolutePath}",
-        "-Djdk.instrument.traceUsage=false",
-        "-XX:+EnableDynamicAgentLoading"
-    )
 
     // Убедитесь, что тесты выполняются в правильном порядке
     failFast = false

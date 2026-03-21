@@ -23,6 +23,13 @@ rsa:
 
 app:
   welcome-message: "Welcome to Spring blog!"
+  # Отдельный фронт на другом origin: перечислите URL (без слэша в конце), например:
+  # cors:
+  #   allowed-origins:
+  #     - http://localhost:5173
+  #     - https://app.example.com
+  cors:
+    allowed-origins: []
 
 logging:
   pattern:

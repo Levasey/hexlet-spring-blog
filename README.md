@@ -99,6 +99,8 @@ docker compose up --build
 
 Отчёт JaCoCo: `./gradlew jacocoTestReport` → `build/reports/jacoco/test/html/index.html`
 
+Если при поднятии контекста JPA Hibernate падает с `NoClassDefFoundError: java/lang/Claso`, обычно виноват **битый JAR в кэше Gradle** (в нормальном артефакте такой строки нет). Удалите, например, `~/.gradle/caches/modules-2/files-2.1/org.hibernate.orm/hibernate-core/` для нужной версии и выполните `./gradlew --refresh-dependencies clean check`.
+
 В тестах активен профиль `test` (см. `build.gradle.kts` и `application-test.yml`). Защищённые сценарии опираются на `@WithMockUser` или на реальную цепочку JWT (например `PostsApiSecurityIntegrationTest`); устаревшее отключение Security через `spring.security.enabled` в Boot 3.x здесь не применяется.
 
 ## API (кратко)
