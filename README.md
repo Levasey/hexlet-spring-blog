@@ -23,6 +23,28 @@
 
 По умолчанию поднимается с `application.yml`: встроенная H2, RSA-ключи JWT из `src/main/resources/certs/`.
 
+#### RSA-ключи для JWT (новый разработчик / прод без ключей в репозитории)
+
+Приложение читает пути из `rsa.private-key` и `rsa.public-key` в `application.yml` (по умолчанию `classpath:certs/private.pem` и `public.pem`). В учебном репозитории файлы могут лежать в `src/main/resources/certs/`; в продакшене ключи обычно **не коммитят** — их кладут в образ/секреты и подключают через переменные или внешние файлы.
+
+**Локально сгенерировать пару (OpenSSL):**
+
+```bash
+chmod +x scripts/generate-rsa-jwt-keys.sh
+./scripts/generate-rsa-jwt-keys.sh
+```
+
+Скрипт создаёт PKCS#8 private key и публичный ключ в PEM — тот же формат, что ожидает Spring. Чтобы положить ключи в другой каталог: `./scripts/generate-rsa-jwt-keys.sh /path/to/certs`, затем укажите пути в конфиге, например `file:/absolute/path/private.pem` (см. [Spring Boot Externalized Configuration](https://docs.spring.io/spring-boot/reference/features/external-config.html)).
+
+**Вручную (эквивалент скрипта):**
+
+```bash
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
+openssl pkey -in private.pem -pubout -out public.pem
+```
+
+Тесты (`application-test.yml`) JWT по RSA не поднимают — для `./gradlew test` отдельные ключи не нужны. Для `bootRun` без ключей в classpath приложение не стартует.
+
 ### Профили
 
 | Профиль       | Как включить | Назначение |
