@@ -31,6 +31,18 @@
 | `development` | `SPRING_PROFILES_ACTIVE=development ./gradlew bootRun` или `--args='--spring.profiles.active=development'` | H2 в файл `./data/devdb` — см. `application-development.yml` |
 | `production`  | `SPRING_PROFILES_ACTIVE=production` + переменные `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL — см. `application-production.yml` |
 
+#### Переменные для `application-production.yml`
+
+В `application-production.yml` подключение к БД задаётся через плейсхолдеры Spring:
+
+| Переменная | Обязательность | Описание |
+|------------|----------------|----------|
+| `DB_URL` | **Обязательна в продакшене** (технически есть дефолт `jdbc:postgresql://localhost:5432/myapp`) | Полный JDBC URL PostgreSQL. |
+| `DB_USERNAME` | То же (дефолт `postgres`) | Имя пользователя БД. |
+| `DB_PASSWORD` | То же (дефолт `postgres`) | Пароль; в боевом окружении дефолт переопределять обязательно. |
+
+Профиль включается так: `SPRING_PROFILES_ACTIVE=production`. В этом профиле `spring.jpa.hibernate.ddl-auto` = **validate** — таблицы должны уже существовать (миграции или однократный `update`). Пример всех переменных для локальной копии: [.env.example](.env.example).
+
 ### Docker (PostgreSQL + приложение)
 
 Требуется [Docker](https://docs.docker.com/get-docker/) и Docker Compose v2.
