@@ -46,11 +46,12 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public PostDTO findById(Long id) {
-        Post post = postRepository.findById(id)
+        Post post = postRepository.findByIdWithTagsAndAuthor(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
         if (userUtils.getCurrentUser() == null && !post.isPublished()) {
             throw new ResourceNotFoundException("Post not found with id: " + id);
         }
+        postRepository.findByIdWithComments(id);
         return postMapper.toDTO(post);
     }
 

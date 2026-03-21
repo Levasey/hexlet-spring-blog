@@ -33,6 +33,16 @@ public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificat
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.tags WHERE p.id = :id")
     Optional<Post> findByIdWithTags(@Param("id") Long id);
 
+    /**
+     * Одна коллекция + автор в одном запросе. Комментарии подгружаются отдельно ({@link #findByIdWithComments}),
+     * иначе Hibernate не даст два JOIN FETCH по двум List-коллекциям (multiple bags).
+     */
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.tags LEFT JOIN FETCH p.author WHERE p.id = :id")
+    Optional<Post> findByIdWithTagsAndAuthor(@Param("id") Long id);
+
+    @Query("SELECT DISTINCT p FROM Post p LEFT JOIN FETCH p.comments WHERE p.id = :id")
+    Optional<Post> findByIdWithComments(@Param("id") Long id);
+
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.tags LEFT JOIN FETCH p.author")
     List<Post> findAllWithTagsAndAuthor();
 

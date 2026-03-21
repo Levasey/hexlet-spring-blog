@@ -149,7 +149,8 @@ class PostServiceTest {
     void findById_WhenPostExists_ShouldReturnPost() {
         // Arrange
         when(userUtils.getCurrentUser()).thenReturn(null);
-        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(postRepository.findByIdWithTagsAndAuthor(1L)).thenReturn(Optional.of(testPost));
+        when(postRepository.findByIdWithComments(1L)).thenReturn(Optional.of(testPost));
         when(postMapper.toDTO(testPost)).thenReturn(testPostDTO);
 
         // Act
@@ -159,20 +160,22 @@ class PostServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getTitle()).isEqualTo("Test Post");
-        verify(postRepository).findById(1L);
+        verify(postRepository).findByIdWithTagsAndAuthor(1L);
+        verify(postRepository).findByIdWithComments(1L);
     }
 
     @Test
     void findById_WhenPostNotExists_ShouldThrowException() {
         // Arrange
-        when(postRepository.findById(999L)).thenReturn(Optional.empty());
+        when(postRepository.findByIdWithTagsAndAuthor(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> postService.findById(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Post not found with id: 999");
 
-        verify(postRepository).findById(999L);
+        verify(postRepository).findByIdWithTagsAndAuthor(999L);
+        verify(postRepository, never()).findByIdWithComments(anyLong());
         verifyNoInteractions(userUtils);
     }
 
@@ -180,20 +183,22 @@ class PostServiceTest {
     void findById_WhenDraftAndAnonymous_ShouldThrowNotFound() {
         testPost.setPublished(false);
         when(userUtils.getCurrentUser()).thenReturn(null);
-        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(postRepository.findByIdWithTagsAndAuthor(1L)).thenReturn(Optional.of(testPost));
 
         assertThatThrownBy(() -> postService.findById(1L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Post not found with id: 1");
 
         verify(postMapper, never()).toDTO(any());
+        verify(postRepository, never()).findByIdWithComments(anyLong());
     }
 
     @Test
     void findById_WhenDraftButUserAuthenticated_ShouldReturnPost() {
         testPost.setPublished(false);
         when(userUtils.getCurrentUser()).thenReturn(testUser);
-        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(postRepository.findByIdWithTagsAndAuthor(1L)).thenReturn(Optional.of(testPost));
+        when(postRepository.findByIdWithComments(1L)).thenReturn(Optional.of(testPost));
         when(postMapper.toDTO(testPost)).thenReturn(testPostDTO);
         testPostDTO.setPublished(false);
 
