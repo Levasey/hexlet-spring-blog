@@ -2,6 +2,7 @@ package io.hexletspringblog.util;
 
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
+import io.hexletspringblog.model.UserRole;
 import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -44,6 +45,7 @@ public class ModelGenerator {
             user.setLastName(faker.name().lastName());
             user.setEmail(faker.internet().emailAddress());
             user.setPasswordDigest(passwordEncoder.encode("password"));
+            user.setRole(UserRole.USER);
 
             // Generate birthday - simple approach
             int age = faker.number().numberBetween(18, 80);

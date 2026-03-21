@@ -7,8 +7,10 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.hexletspringblog.dto.PostCreateDTO;
+import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.model.Post;
 import io.hexletspringblog.model.User;
+import io.hexletspringblog.model.UserRole;
 import io.hexletspringblog.model.Tag;
 import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.UserRepository;
@@ -27,6 +29,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.util.List;
 
@@ -281,12 +284,61 @@ class PostControllerTest {
         assertThat(postRepository.findById(post.getId())).isEmpty();
     }
 
+    @Test
+    @WithMockUser(username = "jane@example.com", roles = {"USER"})
+    void updatePost_whenNotAuthor_returns403() throws Exception {
+        User author = generateUser("john@example.com");
+        userRepository.save(author);
+        User other = generateUser("jane@example.com");
+        userRepository.save(other);
+
+        Post post = generatePost(author);
+        postRepository.save(post);
+
+        PostUpdateDTO updates = new PostUpdateDTO();
+        updates.setTitle(JsonNullable.of("Intruder title"));
+        updates.setContent(JsonNullable.of("Intruder content long enough"));
+
+        mockMvc.perform(put("/api/posts/" + post.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(updates)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin@example.com", roles = {"ADMIN"})
+    void updatePost_whenAdmin_canEditOthersPost() throws Exception {
+        User author = generateUser("john@example.com");
+        userRepository.save(author);
+        User admin = generateUser("admin@example.com");
+        admin.setRole(UserRole.ADMIN);
+        userRepository.save(admin);
+
+        Post post = generatePost(author);
+        postRepository.save(post);
+
+        PostUpdateDTO updates = new PostUpdateDTO();
+        updates.setTitle(JsonNullable.of("Admin changed title"));
+        updates.setContent(JsonNullable.of("Admin changed content long enough"));
+
+        mockMvc.perform(put("/api/posts/" + post.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(updates)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Admin changed title"));
+    }
+
     private User generateUser() {
+        return generateUser("john@example.com");
+    }
+
+    private User generateUser(String email) {
         return Instancio.of(User.class)
                 .ignore(Select.field(User::getId))
                 .supply(Select.field(User::getFirstName), () -> "John")
                 .supply(Select.field(User::getLastName), () -> "Doe")
-                .supply(Select.field(User::getEmail), () -> "john@example.com")
+                .supply(Select.field(User::getEmail), () -> email)
+                .supply(Select.field(User::getRole), () -> UserRole.USER)
                 .create();
     }
 

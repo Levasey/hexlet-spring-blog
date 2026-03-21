@@ -4,6 +4,7 @@ import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.dto.PostParamsDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
+import io.hexletspringblog.exception.AccessForbiddenException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +75,8 @@ public class PostService {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
 
+        assertCanModifyPost(post);
+
         postMapper.updateEntityFromDTO(postUpdateDTO, post);
 
         // Handle tags update if provided
@@ -86,10 +90,24 @@ public class PostService {
     }
 
     public void delete(Long id) {
-        if (!postRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Post not found with id: " + id);
-        }
+        Post post = postRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+        assertCanModifyPost(post);
         postRepository.deleteById(id);
+    }
+
+    private void assertCanModifyPost(Post post) {
+        if (userUtils.isCurrentUserAdmin()) {
+            return;
+        }
+        User current = userUtils.getCurrentUser();
+        if (current == null) {
+            throw new AccessForbiddenException("Требуется вход в систему");
+        }
+        User author = post.getAuthor();
+        if (author == null || !Objects.equals(author.getId(), current.getId())) {
+            throw new AccessForbiddenException("Редактировать или удалять пост может только автор");
+        }
     }
 
     @Transactional(readOnly = true)

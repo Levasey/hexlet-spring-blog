@@ -30,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
+@WithMockUser(username = "john@example.com", roles = {"USER"})
 class PostServiceIntegrationTest {
 
     @Autowired

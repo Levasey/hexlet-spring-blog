@@ -1,5 +1,6 @@
 package io.hexletspringblog.handler;
 
+import io.hexletspringblog.exception.AccessForbiddenException;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +19,19 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccessForbiddenException.class)
+    public ResponseEntity<ProblemDetail> handleForbidden(AccessForbiddenException ex, HttpServletRequest request) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.FORBIDDEN,
+                "FORBIDDEN",
+                "Forbidden",
+                ex.getMessage(),
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
+    }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {

@@ -4,6 +4,7 @@ import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.dto.PostParamsDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
+import io.hexletspringblog.exception.AccessForbiddenException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
 import io.hexletspringblog.mapper.PostMapper;
 import io.hexletspringblog.model.Post;
@@ -344,6 +345,8 @@ class PostServiceTest {
         updatedPostDTO.setAuthorId(1L);
 
         when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.getCurrentUser()).thenReturn(testUser);
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
         doNothing().when(postMapper).updateEntityFromDTO(updateDTO, testPost);
         when(postRepository.save(testPost)).thenReturn(updatedPost);
         when(postMapper.toDTO(updatedPost)).thenReturn(updatedPostDTO);
@@ -387,6 +390,8 @@ class PostServiceTest {
         updatedPostDTO.setAuthorId(1L);
 
         when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.getCurrentUser()).thenReturn(testUser);
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
         doNothing().when(postMapper).updateEntityFromDTO(updateDTO, testPost);
         when(tagRepository.findAllById(List.of(2L))).thenReturn(List.of(newTag));
         when(postRepository.save(testPost)).thenReturn(updatedPost);
@@ -425,6 +430,8 @@ class PostServiceTest {
         updateDTO.setTagIds(org.openapitools.jackson.nullable.JsonNullable.of(List.of(999L)));
 
         when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.getCurrentUser()).thenReturn(testUser);
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
         doNothing().when(postMapper).updateEntityFromDTO(updateDTO, testPost);
         when(tagRepository.findAllById(List.of(999L))).thenReturn(List.of());
         when(postRepository.save(testPost)).thenReturn(testPost);
@@ -440,29 +447,91 @@ class PostServiceTest {
     }
 
     @Test
+    void update_WhenNotAuthor_ShouldThrowForbidden() {
+        PostUpdateDTO updateDTO = new PostUpdateDTO();
+        updateDTO.setTitle(org.openapitools.jackson.nullable.JsonNullable.of("X"));
+
+        User other = new User();
+        other.setId(99L);
+        other.setEmail("other@example.com");
+
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
+        when(userUtils.getCurrentUser()).thenReturn(other);
+
+        assertThatThrownBy(() -> postService.update(1L, updateDTO))
+                .isInstanceOf(AccessForbiddenException.class);
+        verify(postRepository, never()).save(any());
+    }
+
+    @Test
+    void update_WhenAdmin_ShouldUpdateEvenIfNotAuthor() {
+        PostUpdateDTO updateDTO = new PostUpdateDTO();
+        updateDTO.setTitle(org.openapitools.jackson.nullable.JsonNullable.of("Admin edit"));
+
+        User other = new User();
+        other.setId(99L);
+
+        Post updatedPost = new Post();
+        updatedPost.setId(1L);
+        updatedPost.setTitle("Admin edit");
+        updatedPost.setAuthor(testUser);
+
+        PostDTO updatedDto = new PostDTO();
+        updatedDto.setTitle("Admin edit");
+
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.isCurrentUserAdmin()).thenReturn(true);
+        doNothing().when(postMapper).updateEntityFromDTO(updateDTO, testPost);
+        when(postRepository.save(testPost)).thenReturn(updatedPost);
+        when(postMapper.toDTO(updatedPost)).thenReturn(updatedDto);
+
+        PostDTO result = postService.update(1L, updateDTO);
+
+        assertThat(result.getTitle()).isEqualTo("Admin edit");
+        verify(postRepository).save(testPost);
+    }
+
+    @Test
     void delete_WhenPostExists_ShouldDeletePost() {
         // Arrange
-        when(postRepository.existsById(1L)).thenReturn(true);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.getCurrentUser()).thenReturn(testUser);
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
 
         // Act
         postService.delete(1L);
 
         // Assert
-        verify(postRepository).existsById(1L);
+        verify(postRepository).findById(1L);
         verify(postRepository).deleteById(1L);
     }
 
     @Test
     void delete_WhenPostNotExists_ShouldThrowException() {
         // Arrange
-        when(postRepository.existsById(999L)).thenReturn(false);
+        when(postRepository.findById(999L)).thenReturn(Optional.empty());
 
         // Act & Assert
         assertThatThrownBy(() -> postService.delete(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("Post not found with id: 999");
 
-        verify(postRepository).existsById(999L);
+        verify(postRepository).findById(999L);
+        verify(postRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void delete_WhenNotAuthor_ShouldThrowForbidden() {
+        User other = new User();
+        other.setId(99L);
+
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(userUtils.isCurrentUserAdmin()).thenReturn(false);
+        when(userUtils.getCurrentUser()).thenReturn(other);
+
+        assertThatThrownBy(() -> postService.delete(1L))
+                .isInstanceOf(AccessForbiddenException.class);
         verify(postRepository, never()).deleteById(anyLong());
     }
 
