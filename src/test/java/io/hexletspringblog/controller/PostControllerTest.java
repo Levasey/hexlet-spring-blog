@@ -23,6 +23,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.anonymous;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,7 +33,7 @@ import java.util.List;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@WithMockUser(username = "testuser", roles = {"USER"})
+@WithMockUser(username = "john@example.com", roles = {"USER"})
 class PostControllerTest {
 
     @Autowired
@@ -131,6 +133,77 @@ class PostControllerTest {
     }
 
     @Test
+    void index_whenAnonymous_returnsOnlyPublished_evenIfPublishedFalseRequested() throws Exception {
+        User user = generateUser();
+        userRepository.save(user);
+
+        Post draft = generatePost(user);
+        draft.setPublished(false);
+        draft.setSlug("draft-slug-" + System.currentTimeMillis());
+        postRepository.save(draft);
+
+        Post published = generatePost(user);
+        published.setPublished(true);
+        published.setSlug("pub-slug-" + System.currentTimeMillis());
+        postRepository.save(published);
+
+        var result = mockMvc.perform(get("/api/posts")
+                        .with(anonymous())
+                        .param("published", "false"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThatJson(result.getResponse().getContentAsString())
+                .node("content")
+                .isArray()
+                .hasSize(1);
+        assertThatJson(result.getResponse().getContentAsString())
+                .node("content[0].slug")
+                .isString()
+                .isEqualTo(published.getSlug());
+    }
+
+    @Test
+    void showPost_whenAnonymous_andDraft_returns404() throws Exception {
+        User user = generateUser();
+        userRepository.save(user);
+
+        Post draft = generatePost(user);
+        draft.setPublished(false);
+        draft.setSlug("draft-only-" + System.currentTimeMillis());
+        postRepository.save(draft);
+
+        mockMvc.perform(get("/api/posts/" + draft.getId()).with(anonymous()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void index_whenAuthenticated_canFilterDraftsOnly() throws Exception {
+        User user = generateUser();
+        userRepository.save(user);
+
+        Post draft = generatePost(user);
+        draft.setPublished(false);
+        draft.setSlug("d-" + System.currentTimeMillis());
+        postRepository.save(draft);
+
+        Post published = generatePost(user);
+        published.setPublished(true);
+        published.setSlug("p-" + System.currentTimeMillis());
+        postRepository.save(published);
+
+        var result = mockMvc.perform(get("/api/posts").param("published", "false"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThatJson(result.getResponse().getContentAsString()).node("content").isArray().hasSize(1);
+        assertThatJson(result.getResponse().getContentAsString())
+                .node("content[0].slug")
+                .isString()
+                .isEqualTo(draft.getSlug());
+    }
+
+    @Test
     void testCreatePost() throws Exception {
         // First create a user
         User user = generateUser();
@@ -225,6 +298,7 @@ class PostControllerTest {
                 .supply(Select.field(Post::getSlug), () -> "test-slug-" + System.currentTimeMillis())
                 .supply(Select.field(Post::getTitle), () -> "Test Title")
                 .supply(Select.field(Post::getContent), () -> "Test content for the post")
+                .supply(Select.field(Post::isPublished), () -> true)
                 .set(Select.field(Post::getAuthor), user)
                 .create();
     }

@@ -17,7 +17,8 @@ public class PostSpecification {
         return withTitleContaining(params.getNameCont())
                 .and(withAuthorId(params.getAuthorId()))
                 .and(withCreatedAtFrom(params.getCreatedAtGt()))
-                .and(withCreatedAtUpTo(params.getCreatedAtLt()));
+                .and(withCreatedAtUpTo(params.getCreatedAtLt()))
+                .and(withPublished(params.getPublished()));
     }
 
     /** nameCont — подстрока в заголовке (без учёта регистра). */
@@ -34,6 +35,15 @@ public class PostSpecification {
     private Specification<Post> withAuthorId(Long authorId) {
         return (root, query, cb) ->
                 authorId == null ? cb.conjunction() : cb.equal(root.get("author").get("id"), authorId);
+    }
+
+    private Specification<Post> withPublished(Boolean published) {
+        return (root, query, cb) -> {
+            if (published == null) {
+                return cb.conjunction();
+            }
+            return cb.equal(root.get("published"), published);
+        };
     }
 
     /**

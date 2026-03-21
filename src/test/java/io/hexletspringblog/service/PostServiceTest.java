@@ -13,6 +13,7 @@ import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.repository.UserRepository;
 import io.hexletspringblog.specification.PostSpecification;
+import io.hexletspringblog.util.UserUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +53,9 @@ class PostServiceTest {
 
     @Mock
     private PostSpecification postSpecification;
+
+    @Mock
+    private UserUtils userUtils;
 
     @InjectMocks
     private PostService postService;
@@ -143,6 +147,7 @@ class PostServiceTest {
     @Test
     void findById_WhenPostExists_ShouldReturnPost() {
         // Arrange
+        when(userUtils.getCurrentUser()).thenReturn(null);
         when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
         when(postMapper.toDTO(testPost)).thenReturn(testPostDTO);
 
@@ -167,6 +172,34 @@ class PostServiceTest {
                 .hasMessage("Post not found with id: 999");
 
         verify(postRepository).findById(999L);
+        verifyNoInteractions(userUtils);
+    }
+
+    @Test
+    void findById_WhenDraftAndAnonymous_ShouldThrowNotFound() {
+        testPost.setPublished(false);
+        when(userUtils.getCurrentUser()).thenReturn(null);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+
+        assertThatThrownBy(() -> postService.findById(1L))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Post not found with id: 1");
+
+        verify(postMapper, never()).toDTO(any());
+    }
+
+    @Test
+    void findById_WhenDraftButUserAuthenticated_ShouldReturnPost() {
+        testPost.setPublished(false);
+        when(userUtils.getCurrentUser()).thenReturn(testUser);
+        when(postRepository.findById(1L)).thenReturn(Optional.of(testPost));
+        when(postMapper.toDTO(testPost)).thenReturn(testPostDTO);
+        testPostDTO.setPublished(false);
+
+        PostDTO result = postService.findById(1L);
+
+        assertThat(result.isPublished()).isFalse();
+        verify(postMapper).toDTO(testPost);
     }
 
     @Test

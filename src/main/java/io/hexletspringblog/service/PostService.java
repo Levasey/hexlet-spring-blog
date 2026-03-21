@@ -13,6 +13,7 @@ import io.hexletspringblog.repository.PostRepository;
 import io.hexletspringblog.repository.TagRepository;
 import io.hexletspringblog.repository.UserRepository;
 import io.hexletspringblog.specification.PostSpecification;
+import io.hexletspringblog.util.UserUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ public class PostService {
     private final TagRepository tagRepository;
     private final PostMapper postMapper;
     private final PostSpecification postSpecification;
+    private final UserUtils userUtils;
 
     @Transactional(readOnly = true)
     public Page<PostDTO> findAll(PostParamsDTO params, Pageable pageable) {
@@ -44,6 +46,9 @@ public class PostService {
     public PostDTO findById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found with id: " + id));
+        if (userUtils.getCurrentUser() == null && !post.isPublished()) {
+            throw new ResourceNotFoundException("Post not found with id: " + id);
+        }
         return postMapper.toDTO(post);
     }
 

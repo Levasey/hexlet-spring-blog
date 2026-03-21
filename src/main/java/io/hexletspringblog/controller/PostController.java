@@ -35,6 +35,9 @@ public class PostController {
             PostParamsDTO params,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
+        if (userUtils.getCurrentUser() == null) {
+            params.setPublished(Boolean.TRUE);
+        }
         Pageable pageable = PageRequest.of(page, size);
         return postService.findAll(params, pageable);
     }

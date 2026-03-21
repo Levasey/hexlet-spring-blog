@@ -64,7 +64,9 @@
 | Пользователи  | `/api/users`       | `POST /api/users/register` — публично; остальное — с JWT |
 | Вход          | `POST /api/login`  | выдача JWT (RSA в `certs/`) |
 
-Список постов: query-параметры пагинации `page`, `size` и фильтры из `PostParamsDTO` (например `authorId`, `nameCont`, `createdAtGt`, `createdAtLt`).
+Список постов: query-параметры пагинации `page`, `size` и фильтры из `PostParamsDTO` (например `authorId`, `nameCont`, `createdAtGt`, `createdAtLt`, `published`).
+
+Без JWT ответ **GET** `/api/posts` всегда содержит только опубликованные посты (параметр `published` не ослабляет фильтр). С JWT можно передать `published=true` / `published=false` или не указывать параметр, чтобы получить и черновики, и опубликованные. **GET** `/api/posts/{id}` для черновика без JWT возвращает 404.
 
 Страницы вне API: `/`, `/about`, `/welcome`.
 
