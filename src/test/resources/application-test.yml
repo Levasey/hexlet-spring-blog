@@ -27,3 +27,5 @@ logging:
 
 app:
   welcome-message: "Welcome to Spring blog!"
+  rate-limit:
+    enabled: false

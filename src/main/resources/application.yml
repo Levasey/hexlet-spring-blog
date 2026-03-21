@@ -23,6 +23,15 @@ rsa:
 
 app:
   welcome-message: "Welcome to Spring blog!"
+  rate-limit:
+    enabled: true
+    trust-x-forwarded-for: false
+    login:
+      enabled: true
+      requests-per-minute: 20
+    public-get:
+      enabled: false
+      requests-per-minute: 300
   # Отдельный фронт на другом origin: перечислите URL (без слэша в конце), например:
   # cors:
   #   allowed-origins:
