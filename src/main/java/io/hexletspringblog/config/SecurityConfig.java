@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -31,7 +32,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Публичные эндпоинты
                         .requestMatchers("/", "/about", "/welcome", "/api/login", "/api/users/register").permitAll()
-                        .requestMatchers("/api/posts", "/api/posts/{id}", "/api/tags", "/api/tags/{id}").permitAll()
+                        // Чтение постов и тегов без JWT; изменение — только с аутентификацией
+                        .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tags", "/api/tags/*").permitAll()
 
                         // Защищенные эндпоинты - требуют аутентификации
                         .requestMatchers("/api/posts/**", "/api/users/**", "/api/tags/**").authenticated()

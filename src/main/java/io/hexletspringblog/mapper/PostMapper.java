@@ -4,7 +4,6 @@ import io.hexletspringblog.dto.PostCreateDTO;
 import io.hexletspringblog.dto.PostDTO;
 import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.model.Post;
-import io.hexletspringblog.model.User;
 import org.mapstruct.*;
 
 @Mapper(
