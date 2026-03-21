@@ -302,7 +302,7 @@ class CommentControllerTest {
 
         mockMvc.perform(request)
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.body").exists());
+                .andExpect(jsonPath("$.fieldErrors.body").exists());
     }
 
     @Test
@@ -319,7 +319,7 @@ class CommentControllerTest {
 
         mockMvc.perform(request)
                 .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.body").exists());
+                .andExpect(jsonPath("$.fieldErrors.body").exists());
     }
 
     private User generateUser() {

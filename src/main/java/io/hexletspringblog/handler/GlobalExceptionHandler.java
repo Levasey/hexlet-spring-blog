@@ -2,46 +2,123 @@ package io.hexletspringblog.handler;
 
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
 import io.hexletspringblog.exception.ResourceNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.net.URI;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<String> handleNotFound(ResourceNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.NOT_FOUND,
+                "NOT_FOUND",
+                "Not Found",
+                ex.getMessage(),
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
     }
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
-    public ResponseEntity<String> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    public ResponseEntity<ProblemDetail> handleResourceAlreadyExists(
+            ResourceAlreadyExistsException ex,
+            HttpServletRequest request
+    ) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.CONFLICT,
+                "CONFLICT",
+                "Conflict",
+                ex.getMessage(),
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+    public ResponseEntity<ProblemDetail> handleValidationErrors(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request
+    ) {
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage())
+                fieldErrors.put(error.getField(), error.getDefaultMessage())
         );
-        return ResponseEntity.unprocessableEntity().body(errors);
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.UNPROCESSABLE_ENTITY,
+                "VALIDATION_FAILED",
+                "Validation Failed",
+                "One or more fields have invalid values",
+                fieldErrors
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handleOtherExceptions(Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Something went wrong: " + ex.getMessage());
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleUnreadableJson(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request
+    ) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.BAD_REQUEST,
+                "BAD_REQUEST",
+                "Bad Request",
+                "Request body is invalid or malformed",
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<String> handleBadCredentials(BadCredentialsException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    public ResponseEntity<ProblemDetail> handleBadCredentials(
+            BadCredentialsException ex,
+            HttpServletRequest request
+    ) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.UNAUTHORIZED,
+                "UNAUTHORIZED",
+                "Unauthorized",
+                "Invalid credentials",
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ProblemDetail> handleOtherExceptions(Exception ex, HttpServletRequest request) {
+        ProblemDetail pd = ApiProblem.of(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_ERROR",
+                "Internal Server Error",
+                "Something went wrong: " + ex.getMessage(),
+                null
+        );
+        setInstance(pd, request);
+        return ApiProblem.respond(pd);
+    }
+
+    private static void setInstance(ProblemDetail pd, HttpServletRequest request) {
+        if (request == null) {
+            return;
+        }
+        String uri = request.getRequestURI();
+        String query = request.getQueryString();
+        pd.setInstance(URI.create(query != null && !query.isEmpty() ? uri + "?" + query : uri));
     }
 }
