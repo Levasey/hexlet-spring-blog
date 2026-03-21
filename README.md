@@ -2,6 +2,9 @@
 
 Учебный блог на **Spring Boot**: REST API (посты, теги, комментарии, пользователи), JWT, JPA, Thymeleaf для статических страниц.
 
+## Линтеры
+[![CI](https://github.com/Levasey/hexlet-spring-blog/actions/workflows/build.yml/badge.svg)](https://github.com/Levasey/hexlet-spring-blog/actions/workflows/build.yml)
+
 ## Стек
 
 - Java **21**, Spring Boot **3.5**
