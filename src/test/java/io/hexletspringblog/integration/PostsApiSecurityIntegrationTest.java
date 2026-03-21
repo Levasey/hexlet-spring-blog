@@ -15,10 +15,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Интеграционные проверки цепочки Spring Security: в профиле {@code test} security по умолчанию
- * выключен; здесь она явно включена через {@code spring.security.enabled=true}.
+ * Интеграционные проверки цепочки Spring Security (JWT resource server + правила из {@code SecurityConfig}).
  */
-@SpringBootTest(properties = "spring.security.enabled=true")
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class PostsApiSecurityIntegrationTest {

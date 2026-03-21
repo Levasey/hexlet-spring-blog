@@ -43,7 +43,7 @@ openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 openssl pkey -in private.pem -pubout -out public.pem
 ```
 
-Тесты (`application-test.yml`) JWT по RSA не поднимают — для `./gradlew test` отдельные ключи не нужны. Для `bootRun` без ключей в classpath приложение не стартует.
+В тестах активен профиль `test` (H2 в памяти); JWT по-прежнему подписывается/проверяется теми же RSA-ключами из `classpath:certs/` (как в основном `application.yml`). Для `bootRun` без ключей в classpath приложение не стартует.
 
 ### Профили
 
@@ -99,7 +99,7 @@ docker compose up --build
 
 Отчёт JaCoCo: `./gradlew jacocoTestReport` → `build/reports/jacoco/test/html/index.html`
 
-В тестах активен профиль `test` (см. `build.gradle.kts` и `application-test.yml`).
+В тестах активен профиль `test` (см. `build.gradle.kts` и `application-test.yml`). Защищённые сценарии опираются на `@WithMockUser` или на реальную цепочку JWT (например `PostsApiSecurityIntegrationTest`); устаревшее отключение Security через `spring.security.enabled` в Boot 3.x здесь не применяется.
 
 ## API (кратко)
 

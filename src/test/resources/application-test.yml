@@ -18,19 +18,12 @@ spring:
     properties:
       hibernate:
         format_sql: true
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          public-key-location: ""  # Отключаем JWT
-    enabled: false  # Отключаем Spring Security
 
 logging:
   level:
     org.springframework: WARN
     org.hibernate: WARN
     io.hexletspringblog: DEBUG
-    org.springframework.security: DEBUG  # Для отладки
 
 app:
   welcome-message: "Welcome to Spring blog!"
