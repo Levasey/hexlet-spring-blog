@@ -34,7 +34,13 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
+      # У форков нет secrets.SONAR_TOKEN → пустой токен и 403 на api.sonarcloud.io/analysis/*
       - name: Build and SonarCloud analysis
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew build sonar --stacktrace
+
+      - name: Build without Sonar (fork PR)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: ./gradlew build --stacktrace

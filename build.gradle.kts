@@ -33,6 +33,10 @@ sonar {
         property("sonar.host.url", "https://sonarcloud.io")
         // Использовать JVM Gradle (например JDK 21 в CI), без запроса /analysis/jres (часто 403 без токена в этом запросе)
         property("sonar.scanner.skipJreProvisioning", "true")
+        // Bearer для api.sonarcloud.io (/analysis/engine, отчёты); без токена эти запросы дают HTTP 403
+        System.getenv("SONAR_TOKEN")?.takeUnless { it.isBlank() }?.let { token ->
+            property("sonar.token", token)
+        }
 
         // Java configuration
         property("sonar.java.source", "21")
