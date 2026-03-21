@@ -13,7 +13,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,8 +37,7 @@ public class PostController {
         if (userUtils.getCurrentUser() == null) {
             params.setPublished(Boolean.TRUE);
         }
-        Pageable pageable = PageRequest.of(page, size);
-        return postService.findAll(params, pageable);
+        return postService.findAll(params, PageRequest.of(page, size));
     }
 
     // Публичный доступ - разрешен всем
