@@ -1,35 +1,46 @@
+# Только PostgreSQL (по умолчанию):
+#   docker compose up -d
+#
+# PostgreSQL + приложение в контейнере:
+#   docker compose --profile app up -d --build
+#
+# Локальный bootRun к БД из compose: профиль production и
+# DB_URL=jdbc:postgresql://localhost:${POSTGRES_HOST_PORT:-5433}/${POSTGRES_DB:-myapp}
+
 services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: myapp
-    # По умолчанию 5433 на хосте — не конфликтует с локальным PostgreSQL на 5432
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-myapp}
     ports:
       - "${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d myapp"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   app:
+    profiles: [app]
     build: .
     ports:
       - "${APP_PORT:-8080}:8080"
     environment:
       SPRING_PROFILES_ACTIVE: production
-      DB_URL: jdbc:postgresql://db:5432/myapp
-      DB_USERNAME: postgres
-      DB_PASSWORD: postgres
-      # В образе нет заранее созданной схемы; для локального старта создаём таблицы через Hibernate.
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-myapp}
+      DB_USERNAME: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # В образе нет заранее созданной схемы; первый старт без миграций — Hibernate создаёт таблицы.
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       db:
         condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
