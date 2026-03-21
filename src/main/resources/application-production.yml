@@ -11,3 +11,13 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+
+management:
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: false
