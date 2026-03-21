@@ -2,20 +2,16 @@ package io.hexletspringblog.handler;
 
 import io.hexletspringblog.exception.AccessForbiddenException;
 import io.hexletspringblog.exception.ResourceAlreadyExistsException;
-import io.hexletspringblog.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -26,19 +22,6 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN,
                 "FORBIDDEN",
                 "Forbidden",
-                ex.getMessage(),
-                null
-        );
-        setInstance(pd, request);
-        return ApiProblem.respond(pd);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ProblemDetail> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        ProblemDetail pd = ApiProblem.of(
-                HttpStatus.NOT_FOUND,
-                "NOT_FOUND",
-                "Not Found",
                 ex.getMessage(),
                 null
         );
@@ -57,26 +40,6 @@ public class GlobalExceptionHandler {
                 "Conflict",
                 ex.getMessage(),
                 null
-        );
-        setInstance(pd, request);
-        return ApiProblem.respond(pd);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ProblemDetail> handleValidationErrors(
-            MethodArgumentNotValidException ex,
-            HttpServletRequest request
-    ) {
-        Map<String, String> fieldErrors = new LinkedHashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-                fieldErrors.put(error.getField(), error.getDefaultMessage())
-        );
-        ProblemDetail pd = ApiProblem.of(
-                HttpStatus.UNPROCESSABLE_ENTITY,
-                "VALIDATION_FAILED",
-                "Validation Failed",
-                "One or more fields have invalid values",
-                fieldErrors
         );
         setInstance(pd, request);
         return ApiProblem.respond(pd);
