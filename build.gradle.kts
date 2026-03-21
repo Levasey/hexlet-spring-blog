@@ -31,6 +31,8 @@ sonar {
         property("sonar.organization", "levasey")
         property("sonar.projectName", "Hexlet Spring Blog")
         property("sonar.host.url", "https://sonarcloud.io")
+        // Использовать JVM Gradle (например JDK 21 в CI), без запроса /analysis/jres (часто 403 без токена в этом запросе)
+        property("sonar.scanner.skipJreProvisioning", "true")
 
         // Java configuration
         property("sonar.java.source", "21")

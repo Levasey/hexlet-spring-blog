@@ -34,7 +34,7 @@ jobs:
       - name: Run tests
         run: ./gradlew test
 
-      - name: Build and analyze with debug
+      - name: Build and SonarCloud analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --debug --stacktrace
+        run: ./gradlew build sonar --stacktrace
