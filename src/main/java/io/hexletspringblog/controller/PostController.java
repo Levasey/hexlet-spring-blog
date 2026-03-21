@@ -7,6 +7,8 @@ import io.hexletspringblog.dto.PostUpdateDTO;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.service.PostService;
 import io.hexletspringblog.util.UserUtils;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "Posts", description = "Посты блога (чтение публично, изменение — с JWT)")
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class PostController {
     private final UserUtils userUtils;
 
     // Публичный доступ - разрешен всем
+    @SecurityRequirements
     @GetMapping
     public Page<PostDTO> index(
             PostParamsDTO params,
@@ -36,6 +40,7 @@ public class PostController {
     }
 
     // Публичный доступ - разрешен всем
+    @SecurityRequirements
     @GetMapping("/{id}")
     public ResponseEntity<PostDTO> showPost(@PathVariable Long id) {
         PostDTO postDTO = postService.findById(id);

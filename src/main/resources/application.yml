@@ -15,3 +15,12 @@ rsa:
 
 app:
   welcome-message: "Welcome to Spring blog!"
+
+springdoc:
+  paths-to-match: /api/**
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs

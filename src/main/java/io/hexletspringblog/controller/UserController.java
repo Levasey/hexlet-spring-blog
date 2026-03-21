@@ -10,6 +10,8 @@ import io.hexletspringblog.mapper.UserMapper;
 import io.hexletspringblog.model.User;
 import io.hexletspringblog.repository.UserRepository;
 import io.hexletspringblog.service.CustomUserDetailsService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+@Tag(name = "Users", description = "Пользователи и регистрация")
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
@@ -82,6 +85,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @SecurityRequirements
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
         if (userService.userExists(registrationDTO.getEmail())) {

@@ -3,6 +3,7 @@ package io.hexletspringblog.controller;
 import io.hexletspringblog.dto.CommentDTO;
 import io.hexletspringblog.dto.CommentUpdateDTO;
 import io.hexletspringblog.service.CommentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Comments", description = "Комментарии к постам")
 @RestController
 @RequestMapping("/api/comments")
 public class CommentController {

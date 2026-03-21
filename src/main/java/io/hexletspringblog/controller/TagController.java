@@ -4,6 +4,8 @@ import io.hexletspringblog.dto.TagCreateDTO;
 import io.hexletspringblog.dto.TagDTO;
 import io.hexletspringblog.dto.TagUpdateDTO;
 import io.hexletspringblog.service.TagService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Tag(name = "Tags", description = "Теги постов")
 @RestController
 @RequestMapping("/api/tags")
 @RequiredArgsConstructor
@@ -20,6 +23,7 @@ public class TagController {
     private final TagService tagService;
 
     // Публичный доступ
+    @SecurityRequirements
     @GetMapping
     public ResponseEntity<List<TagDTO>> getAllTags() {
         List<TagDTO> tags = tagService.findAll();
@@ -27,6 +31,7 @@ public class TagController {
     }
 
     // Публичный доступ
+    @SecurityRequirements
     @GetMapping("/{id}")
     public ResponseEntity<TagDTO> getTagById(@PathVariable Long id) {
         TagDTO tag = tagService.findById(id);

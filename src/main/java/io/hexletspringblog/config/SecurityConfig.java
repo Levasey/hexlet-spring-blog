@@ -31,6 +31,12 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // Публичные эндпоинты
+                        .requestMatchers(
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**"
+                        ).permitAll()
                         .requestMatchers("/", "/about", "/welcome", "/api/login", "/api/users/register").permitAll()
                         // Чтение постов и тегов без JWT; изменение — только с аутентификацией
                         .requestMatchers(HttpMethod.GET, "/api/posts", "/api/posts/*").permitAll()
