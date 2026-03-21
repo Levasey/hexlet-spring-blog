@@ -31,6 +31,19 @@
 | `development` | `SPRING_PROFILES_ACTIVE=development ./gradlew bootRun` или `--args='--spring.profiles.active=development'` | H2 в файл `./data/devdb` — см. `application-development.yml` |
 | `production`  | `SPRING_PROFILES_ACTIVE=production` + переменные `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL — см. `application-production.yml` |
 
+### Docker (PostgreSQL + приложение)
+
+Требуется [Docker](https://docs.docker.com/get-docker/) и Docker Compose v2.
+
+```bash
+docker compose up --build
+```
+
+- приложение: http://localhost:8080 (если порт занят: `APP_PORT=8081 docker compose up`)  
+- PostgreSQL с хоста: `localhost:5433` (переопределение: `POSTGRES_HOST_PORT=5434 docker compose up`)  
+- БД `myapp`, пользователь/пароль `postgres`/`postgres`  
+- в `docker-compose.yml` задано `SPRING_JPA_HIBERNATE_DDL_AUTO=update`, чтобы схема создалась без отдельных миграций (в `production` по умолчанию стоит `validate`).
+
 ## OpenAPI и Swagger UI
 
 После запуска приложения (порт по умолчанию **8080**):
