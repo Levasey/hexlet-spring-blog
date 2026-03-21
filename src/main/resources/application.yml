@@ -5,6 +5,8 @@ management:
         include: health,info
 
 spring:
+  application:
+    name: hexlet-spring-blog
   datasource:
     driver-class-name: org.h2.Driver
   jpa:
@@ -21,6 +23,10 @@ rsa:
 
 app:
   welcome-message: "Welcome to Spring blog!"
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p [%X{correlationId:-}] --- %-40.40logger{39} : %m%n%wEx"
 
 springdoc:
   paths-to-match: /api/**
